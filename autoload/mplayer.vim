@@ -23,6 +23,36 @@ let s:eq_presets = {
       \ 'classic': '0:3:3:1.5:0:0:0:0:1:1',
       \ 'perfect': '0.75:1.5:2.25:1.75:1.5:1.25:1.75:2.25:2.75:2'
       \}
+let s:properties = [
+      \ 'osdlevel',
+      \ 'speed', 'loop', 'pause',
+      \ 'filename', 'path',
+      \ 'demuxer',
+      \ 'stream_pos', 'stream_start', 'stream_end',
+      \ 'stream_length', 'stream_time_pos',
+      \ 'titles', 'chapter', 'chapters',
+      \ 'angle', 'length',
+      \ 'percent_pos', 'time_pos',
+      \ 'metadata', 'volume', 'balance', 'mute',
+      \ 'audio_delay', 'audio_format', 'audio_codec', 'audio_bitrate',
+      \ 'samplerate', 'channels',
+      \ 'switch_audio', 'switch_angle', 'switch_title',
+      \ 'capturing', 'fullscreen', 'deinterlace',
+      \ 'ontop', 'rootwin',
+      \ 'border', 'framedropping',
+      \ 'gamma', 'brightness', 'contrast', 'saturation',
+      \ 'hue', 'panscan', 'vsync',
+      \ 'video_format', 'video_codec', 'video_bitrate',
+      \ 'width', 'height', 'fps', 'aspect',
+      \ 'switch_video', 'switch_program',
+      \ 'sub', 'sub_source', 'sub_file', 'sub_vob', 'sub_demux', 'sub_delay',
+      \ 'sub_pos', 'sub_alignment', 'sub_visibility',
+      \ 'sub_forced_only', 'sub_scale',
+      \ 'tv_brightness', 'tv_contrast', 'tv_saturation', 'tv_hue',
+      \ 'teletext_page', 'teletext_subpage', 'teletext_mode',
+      \ 'teletext_format', 'teletext_half_page'
+      \]
+lockvar s:properties
 
 let s:V = vital#of('mplayer')
 let s:JSON = s:V.import('Web.JSON')
@@ -30,27 +60,15 @@ let s:PM = s:V.import('ProcessManager')
 
 let s:PROCESS_NAME = 'mplayer' | lockvar s:PROCESS_NAME
 let s:WAIT_TIME = 0.5 | lockvar s:WAIT_TIME
-let s:NRQ = char2nr('q') | lockvar s:NRQ
+let s:EXIT_KEYCODE = char2nr('q') | lockvar s:EXIT_KEYCODE
 let s:DUMMY_COMMAND = 'get_property __NONE__'
 let s:DUMMY_PATTERN = '.*ANS_ERROR=PROPERTY_UNKNOWN' . (has('win32') ? "\r\n" : "\n")
 let s:INFO_COMMANDS = [
-      \ 'get_percent_pos',
-      \ 'get_time_pos',
-      \ 'get_time_length',
-      \ 'get_file_name',
-      \ 'get_video_codec',
-      \ 'get_video_bitrate',
-      \ 'get_video_resolution',
-      \ 'get_audio_codec',
-      \ 'get_audio_bitrate',
-      \ 'get_audio_samples',
-      \ 'get_meta_title',
-      \ 'get_meta_artist',
-      \ 'get_meta_album',
-      \ 'get_meta_year',
-      \ 'get_meta_comment',
-      \ 'get_meta_track',
-      \ 'get_meta_genre'
+      \ 'get_percent_pos', 'get_time_pos', 'get_time_length', 'get_file_name',
+      \ 'get_video_codec', 'get_video_bitrate', 'get_video_resolution',
+      \ 'get_audio_codec', 'get_audio_bitrate', 'get_audio_samples',
+      \ 'get_meta_title', 'get_meta_artist', 'get_meta_album', 'get_meta_year',
+      \ 'get_meta_comment', 'get_meta_track', 'get_meta_genre'
       \]
 let s:KEY_ACTION_DICT = {
       \ "\<Left>": 'seek -10',
@@ -152,7 +170,7 @@ endfunction
 function! mplayer#operate_with_key()
   if !mplayer#is_playing() | return | endif
   let l:key = getchar()
-  while l:key != s:NRQ
+  while l:key != s:EXIT_KEYCODE
     if type(l:key) == 0
       call s:PM.writeln(s:PROCESS_NAME, 'key_down_event ' . l:key)
     elseif has_key(s:KEY_ACTION_DICT, l:key)
@@ -199,13 +217,29 @@ endfunction
 function! mplayer#cmd_complete(arglead, cmdline, cursorpos)
   if !exists('s:cmd_complete_cache')
     let l:cmdlist = vimproc#system(g:mplayer#command . ' -input cmdlist')
-    let s:cmd_complete_cache = map(split(l:cmdlist, "\n"), 'split(v:val, "  *")[0]')
+    let s:cmd_complete_cache = map(split(l:cmdlist, "\n"), 'split(v:val, " \+*")[0]')
   endif
-  return filter(s:cmd_complete_cache, 'v:val =~ "^" . a:arglead')
+  let l:args = split(a:cmdline, '\s\+')
+  let l:nargs = len(l:args)
+  if l:args[l:nargs - 1] ==# 'get_property'
+    return filter(copy(s:properties), 'v:val =~ "^" . a:arglead')
+  elseif l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
+    return filter(copy(s:cmd_complete_cache), 'v:val =~ "^" . a:arglead')
+  endif
+endfunction
+
+function! mplayer#property_complete(arglead, cmdline, cursorpos)
+  let l:nargs = len(split(a:cmdline, '\s\+'))
+  if l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
+    return filter(copy(s:properties), 'v:val =~ "^" . a:arglead')
+  endif
 endfunction
 
 function! mplayer#equlizer_complete(arglead, cmdline, cursorpos)
-  return filter(keys(s:eq_presets), 'v:val =~ "^" . a:arglead')
+  let l:nargs = len(split(a:cmdline, '\s\+'))
+  if l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
+    return filter(keys(s:eq_presets), 'v:val =~ "^" . a:arglead')
+  endif
 endfunction
 
 

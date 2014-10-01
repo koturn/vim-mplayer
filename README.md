@@ -24,10 +24,11 @@ Command                                             | Description
 ```MPlayer [File or Directory] ...```               | Play back specified files.
 ```MPlayerEnqueue [File or Directory] ...```        | Add the files to the current playlist.
 ```MPlayerEqualizer [Preset name or Band string]``` | Set the equalizer of the mplayer.
+```MPlayerGetProperty [Property]```                 | Show the specified property.
 ```MPlayerLoop [The number of loop]```              | Specify the number of loop. 0 means infinite loop, -1 means no loop.
 ```MPlayerNext```                                   | Move to the next music/movie of the current playlist.
 ```MPlayerOperateWithKey```                         | Operate the mplayer with keyboard inputs.
-```MPlayerNext```                                   | Move to the previous music/movie of the current playlist.
+```MPlayerPrev```                                   | Move to the previous music/movie of the current playlist.
 ```MPlayerSeek [Position]```                        | Seek to the specified position. Argument format is ```.*%``` (percent based position) or ```.*s``` (seconds based position)
 ```MPlayerSeekToEnd```                              | Seek to the end of file.
 ```MPlayerSeekToHead```                             | Seek to the head of file.

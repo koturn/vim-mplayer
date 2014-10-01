@@ -31,6 +31,7 @@ command! -bar -nargs=0 MPlayerNext call mplayer#change(1)
 command! -bar -nargs=0 MPlayerShowFileInfo call mplayer#show_file_info()
 command! -bar -nargs=0 MPlayerShowCommandList call mplayer#show_cmdlist()
 command! -bar -nargs=+ -complete=customlist,mplayer#cmd_complete MPlayerSendCommand call mplayer#send_command(<q-args>, 1)
+command! -bar -nargs=1 -complete=customlist,mplayer#property_complete MPlayerGetProperty call mplayer#send_command('get_property ' . <q-args>, 1)
 
 command! -bar -nargs=0 MPlayerFlush call mplayer#flush()
 
