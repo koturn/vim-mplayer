@@ -143,7 +143,7 @@ function! mplayer#seek_to_end()
 endfunction
 
 function! mplayer#set_seek(pos)
-  let l:lastchar = a:pos[len(a:pos) - 1]
+  let l:lastchar = a:pos[-1]
   if l:lastchar ==# '%'
     call mplayer#send_command('seek ' . a:pos . ' 1')
   elseif l:lastchar ==# 's' || l:lastchar =~# '\d'
@@ -221,7 +221,7 @@ function! mplayer#cmd_complete(arglead, cmdline, cursorpos)
   endif
   let l:args = split(a:cmdline, '\s\+')
   let l:nargs = len(l:args)
-  if l:args[l:nargs - 1] ==# 'get_property'
+  if l:args[-1] ==# 'get_property'
     return filter(copy(s:properties), 'v:val =~ "^" . a:arglead')
   elseif l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
     return filter(copy(s:cmd_complete_cache), 'v:val =~ "^" . a:arglead')
@@ -264,19 +264,17 @@ endfunction
 
 function! s:make_loadcmds(args)
   let l:filelist = []
-  for l:item in a:args
-    if isdirectory(expand(l:item))
-      let l:dir_items = split(globpath(l:item, '*'), "\n")
-      for l:dir_item in l:dir_items
-        if filereadable(l:dir_item)
-          call add(l:filelist, s:process_file(l:dir_item))
-        endif
-      endfor
-    elseif l:item =~# '^\(cdda\|cddb\|dvd\|file\|ftp\|gopher\|tv\|vcd\|http\|https\)://'
-      call add(l:filelist, 'loadfile ' . l:item . ' 1')
-    else
-      call add(l:filelist, s:process_file(expand(l:item)))
-    endif
+  for l:arg in a:args
+    for l:item in split(expand(l:arg), "\n")
+      if isdirectory(l:item)
+        let l:dir_items = split(globpath(l:item, '*'), "\n")
+        let l:filelist += map(filter(l:dir_items, 'filereadable(v:val)'), 's:process_file(v:val)')
+      elseif l:item =~# '^\(cdda\|cddb\|dvd\|file\|ftp\|gopher\|tv\|vcd\|http\|https\)://'
+        call add(l:filelist, 'loadfile ' . l:item . ' 1')
+      else
+        call add(l:filelist, s:process_file(expand(l:item)))
+      endif
+    endfor
   endfor
   return l:filelist
 endfunction
