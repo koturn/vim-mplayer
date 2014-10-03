@@ -118,8 +118,15 @@ function! mplayer#is_playing()
   return l:status ==# 'inactive' || l:status ==# 'active'
 endfunction
 
-function! mplayer#change(n)
-  call mplayer#send_command('pt_step ' . a:n)
+function! mplayer#next(...)
+  let l:n = get(a:, 1, 1)
+  call mplayer#send_command('pt_step ' . l:n)
+  call s:read()
+endfunction
+
+function! mplayer#prev(...)
+  let l:n = -get(a:, 1, 1)
+  call mplayer#send_command('pt_step ' . l:n)
   call s:read()
 endfunction
 
@@ -130,33 +137,13 @@ function! mplayer#send_command(cmd, ...)
   echo l:is_iconv ? iconv(s:read(), &tenc, &enc) : s:read()
 endfunction
 
-function! mplayer#set_loop(n)
-  call mplayer#send_command('loop ' . a:n . ' 1')
-endfunction
-
-function! mplayer#seek_to_head()
-  call mplayer#send_command('seek 0 1')
-endfunction
-
-function! mplayer#seek_to_end()
-  call mplayer#send_command('seek 100 1')
-endfunction
-
 function! mplayer#set_seek(pos)
-  let l:lastchar = a:pos[-1]
+  let l:lastchar = a:pos[len(a:pos) - 1]
   if l:lastchar ==# '%'
     call mplayer#send_command('seek ' . a:pos . ' 1')
   elseif l:lastchar ==# 's' || l:lastchar =~# '\d'
     call mplayer#send_command('seek ' . a:pos . ' 2')
   endif
-endfunction
-
-function! mplayer#set_volume(volume)
-  call mplayer#send_command('volume ' . a:volume . ' 1')
-endfunction
-
-function! mplayer#set_speed(speed)
-  call mplayer#send_command('speed_set ' . a:speed)
 endfunction
 
 function! mplayer#set_equalizer(band_str)
