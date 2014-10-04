@@ -17,49 +17,13 @@ else
   let g:mplayer#option = get(g:, 'mplayer#option',
         \ '-idle -quiet -slave -af equalizer=0:0:0:0:0:0:0:0:0:0')
 endif
-let s:eq_presets = {
-      \ 'normal': '0:0:0:0:0:0:0:0:0:0',
-      \ 'bass': '2.25:2.0:1.75:1.50:1.25:1.00:0.75:0.5:0.25:0',
-      \ 'classic': '0:3:3:1.5:0:0:0:0:1:1',
-      \ 'perfect': '0.75:1.5:2.25:1.75:1.5:1.25:1.75:2.25:2.75:2'
-      \}
-let s:properties = [
-      \ 'osdlevel',
-      \ 'speed', 'loop', 'pause',
-      \ 'filename', 'path',
-      \ 'demuxer',
-      \ 'stream_pos', 'stream_start', 'stream_end',
-      \ 'stream_length', 'stream_time_pos',
-      \ 'titles', 'chapter', 'chapters',
-      \ 'angle', 'length',
-      \ 'percent_pos', 'time_pos',
-      \ 'metadata', 'volume', 'balance', 'mute',
-      \ 'audio_delay', 'audio_format', 'audio_codec', 'audio_bitrate',
-      \ 'samplerate', 'channels',
-      \ 'switch_audio', 'switch_angle', 'switch_title',
-      \ 'capturing', 'fullscreen', 'deinterlace',
-      \ 'ontop', 'rootwin',
-      \ 'border', 'framedropping',
-      \ 'gamma', 'brightness', 'contrast', 'saturation',
-      \ 'hue', 'panscan', 'vsync',
-      \ 'video_format', 'video_codec', 'video_bitrate',
-      \ 'width', 'height', 'fps', 'aspect',
-      \ 'switch_video', 'switch_program',
-      \ 'sub', 'sub_source', 'sub_file', 'sub_vob', 'sub_demux', 'sub_delay',
-      \ 'sub_pos', 'sub_alignment', 'sub_visibility',
-      \ 'sub_forced_only', 'sub_scale',
-      \ 'tv_brightness', 'tv_contrast', 'tv_saturation', 'tv_hue',
-      \ 'teletext_page', 'teletext_subpage', 'teletext_mode',
-      \ 'teletext_format', 'teletext_half_page'
-      \]
-lockvar s:properties
 
 let s:V = vital#of('mplayer')
 let s:JSON = s:V.import('Web.JSON')
 let s:PM = s:V.import('ProcessManager')
 
 let s:PROCESS_NAME = 'mplayer' | lockvar s:PROCESS_NAME
-let s:WAIT_TIME = 0.5 | lockvar s:WAIT_TIME
+let s:WAIT_TIME = 0.05 | lockvar s:WAIT_TIME
 let s:EXIT_KEYCODE = char2nr('q') | lockvar s:EXIT_KEYCODE
 let s:DUMMY_COMMAND = 'get_property __NONE__'
 let s:DUMMY_PATTERN = '.*ANS_ERROR=PROPERTY_UNKNOWN' . (has('win32') ? "\r\n" : "\n")
@@ -80,10 +44,59 @@ lockvar s:DUMMY_COMMAND
 lockvar s:DUMMY_PATTERN
 lockvar s:INDO_COMMANDS
 
+let s:eq_presets = {
+      \ 'normal': '0:0:0:0:0:0:0:0:0:0',
+      \ 'bass': '2.25:2.0:1.75:1.50:1.25:1.00:0.75:0.5:0.25:0',
+      \ 'classic': '0:3:3:1.5:0:0:0:0:1:1',
+      \ 'perfect': '0.75:1.5:2.25:1.75:1.5:1.25:1.75:2.25:2.75:2'
+      \}
+let s:SUB_ARG_DICT = {}
+let s:SUB_ARG_DICT.dvdnav = sort([
+      \ 'up', 'down', 'left', 'right',
+      \ 'menu', 'select', 'prev', 'mouse'
+      \])
+let s:SUB_ARG_DICT.menu = sort(['up', 'down', 'ok', 'cancel', 'hide'])
+let s:SUB_ARG_DICT.step_property = sort([
+      \ 'osdlevel',
+      \ 'speed', 'loop',
+      \ 'chapter',
+      \ 'angle',
+      \ 'percent_pos', 'time_pos',
+      \ 'volume', 'balance', 'mute',
+      \ 'audio_delay',
+      \ 'switch_audio', 'switch_angle', 'switch_title',
+      \ 'capturing', 'fullscreen', 'deinterlace',
+      \ 'ontop', 'rootwin',
+      \ 'border', 'framedropping',
+      \ 'gamma', 'brightness', 'contrast', 'saturation',
+      \ 'hue', 'panscan', 'vsync',
+      \ 'switch_video', 'switch_program',
+      \ 'sub', 'sub_source', 'sub_file', 'sub_vob', 'sub_demux', 'sub_delay',
+      \ 'sub_pos', 'sub_alignment', 'sub_visibility',
+      \ 'sub_forced_only', 'sub_scale',
+      \ 'tv_brightness', 'tv_contrast', 'tv_saturation', 'tv_hue',
+      \ 'teletext_page', 'teletext_subpage', 'teletext_mode',
+      \ 'teletext_format', 'teletext_half_page'
+      \])
+let s:SUB_ARG_DICT.set_property = sort(add(s:SUB_ARG_DICT.step_property, 'stream_pos'))
+let s:SUB_ARG_DICT.get_property = sort(s:SUB_ARG_DICT.set_property + [
+      \ 'pause',
+      \ 'filename', 'path',
+      \ 'demuxer',
+      \ 'stream_start', 'stream_end', 'stream_length', 'stream_time_pos',
+      \ 'chapters', 'length',
+      \ 'metadata',
+      \ 'audio_format', 'audio_codec', 'audio_bitrate',
+      \ 'samplerate', 'channels',
+      \ 'video_format', 'video_codec', 'video_bitrate',
+      \ 'width', 'height', 'fps', 'aspect'
+      \])
+lockvar s:SUB_ARG_DICT
+
 
 function! mplayer#play(...)
   if !executable(g:mplayer#command)
-    echoerr 'Error: Please install mplayer to listen streaming radio.'
+    echoerr 'Error: Please install mplayer.'
     return
   endif
   if !s:PM.is_available()
@@ -208,25 +221,31 @@ function! mplayer#cmd_complete(arglead, cmdline, cursorpos)
   endif
   let l:args = split(a:cmdline, '\s\+')
   let l:nargs = len(l:args)
-  if l:args[-1] ==# 'get_property'
-    return filter(copy(s:properties), 'v:val =~ "^" . a:arglead')
+  let l:candidates = []
+  if has_key(s:SUB_ARG_DICT, l:args[-1])
+    let l:candidates = s:SUB_ARG_DICT[l:args[-1]]
+  elseif l:nargs == 3 && a:arglead !=# '' && has_key(s:SUB_ARG_DICT, l:args[-2])
+    let l:candidates = s:SUB_ARG_DICT[l:args[-2]]
   elseif l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
-    return filter(copy(s:cmd_complete_cache), 'v:val =~ "^" . a:arglead')
+    let l:candidates = s:cmd_complete_cache
   endif
+  return filter(copy(l:candidates), 'v:val =~ "^" . a:arglead')
 endfunction
 
-function! mplayer#property_complete(arglead, cmdline, cursorpos)
-  let l:nargs = len(split(a:cmdline, '\s\+'))
-  if l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
-    return filter(copy(s:properties), 'v:val =~ "^" . a:arglead')
-  endif
+function! mplayer#step_property_complete(arglead, cmdline, cursorpos)
+  return s:first_arg_complete(a:arglead, a:cmdline, s:SUB_ARG_DICT.step_property)
+endfunction
+
+function! mplayer#get_property_complete(arglead, cmdline, cursorpos)
+  return s:first_arg_complete(a:arglead, a:cmdline, s:SUB_ARG_DICT.get_property)
+endfunction
+
+function! mplayer#set_property_complete(arglead, cmdline, cursorpos)
+  return s:first_arg_complete(a:arglead, a:cmdline, s:SUB_ARG_DICT.set_property)
 endfunction
 
 function! mplayer#equlizer_complete(arglead, cmdline, cursorpos)
-  let l:nargs = len(split(a:cmdline, '\s\+'))
-  if l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
-    return filter(keys(s:eq_presets), 'v:val =~ "^" . a:arglead')
-  endif
+  return s:first_arg_complete(a:arglead, a:cmdline, keys(s:eq_presets))
 endfunction
 
 
@@ -268,6 +287,13 @@ endfunction
 
 function! s:process_file(file)
   return (a:file =~# '\.\(m3u\|m3u8\|pls\|wax\|wpl\)$' ? 'loadlist ' : 'loadfile ') . a:file . ' 1'
+endfunction
+
+function! s:first_arg_complete(arglead, cmdline, candidates)
+  let l:nargs = len(split(a:cmdline, '\s\+'))
+  if l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
+    return filter(copy(a:candidates), 'v:val =~ "^" . a:arglead')
+  endif
 endfunction
 
 

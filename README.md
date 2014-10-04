@@ -19,27 +19,29 @@ Playlist file is detected by the extension of the file name.
 
 The following table is the command list of this plugin.
 
-Command                                             | Description
-----------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------
-```MPlayer [File or Directory] ...```               | Play back specified files.
-```MPlayerEnqueue [File or Directory] ...```        | Add the files to the current playlist.
-```MPlayerEqualizer [Preset name or Band string]``` | Set the equalizer of the mplayer.
-```MPlayerGetProperty [Property]```                 | Show the specified property.
-```MPlayerLoop [The number of loop]```              | Specify the number of loop. 0 means infinite loop, -1 means no loop.
-```MPlayerNext```                                   | Move to the next music/movie of the current playlist.
-```MPlayerOperateWithKey```                         | Operate the mplayer with keyboard inputs.
-```MPlayerPrev```                                   | Move to the previous music/movie of the current playlist.
-```MPlayerSeek [Position]```                        | Seek to the specified position. Argument format is ```.*%``` (percent based position) or ```.*s``` (seconds based position)
-```MPlayerSeekToEnd```                              | Seek to the end of file.
-```MPlayerSeekToHead```                             | Seek to the head of file.
-```MPlayerSendCommand [arg] ...```                  | Send slave mode commands to the mplayer.
-```MPlayerShowCommandList```                        | Show slave mode commands.
-```MPlayerShowFileInfo```                           | Show the file information of the song which currently playing.
-```MPlayerSpeed [value]```                          | Set the play speed of the mplayer.
-```MPlayerStop```                                   | Stop the mplayer (kill process of the mplayer)
-```MPlayerToggleMute```                             | Toggle mute or not.
-```MPlayerTogglePause```                            | Toggle pause-state or not.
-```MPlayerVolume [value]```                         | Set the volume of the mplayer.
+Command                                                  | Description
+---------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------
+```MPlayer <file or directory> ...```                    | Play back specified files.
+```MPlayerEnqueue <file or directory> ...```             | Add the files to the current playlist.
+```MPlayerEqualizer <preset name or band string>```      | Set the equalizer of the mplayer.
+```MPlayerGetProperty <property>```                      | Print out the current value of a property.
+```MPlayerLoop <the number of loop>```                   | Specify the number of loop. 0 means infinite loop, -1 means no loop.
+```MPlayerNext```                                        | Move to the next music/movie of the current playlist.
+```MPlayerOperateWithKey```                              | Operate the mplayer with keyboard inputs.
+```MPlayerPrev```                                        | Move to the previous music/movie of the current playlist.
+```MPlayerSeek <position>```                             | Seek to the specified position. Argument format is ```.*%``` (percent based position) or ```.*s``` (seconds based position)
+```MPlayerSeekToEnd```                                   | Seek to the end of file.
+```MPlayerSeekToHead```                                  | Seek to the head of file.
+```MPlayerSendCommand <arg> ...```                       | Send slave mode commands to the mplayer.
+```MPlayerSetProperty <property> <values> ...```         | Set a value to the specified property.
+```MPlayerShowCommandList```                             | Show slave mode commands.
+```MPlayerShowFileInfo```                                | Show the file information of the song which currently playing.
+```MPlayerSpeed <value>```                               | Set the play speed of the mplayer.
+```MPlayerStepProperty <property> <value> <direction>``` | Change a property by value, or increase by a default if value is not given or zero.
+```MPlayerStop```                                        | Stop the mplayer (kill process of the mplayer)
+```MPlayerToggleMute```                                  | Toggle mute or not.
+```MPlayerTogglePause```                                 | Toggle pause-state or not.
+```MPlayerVolume <value>```                              | Set the volume of the mplayer.
 
 
 ## Dependent plugins
