@@ -78,7 +78,7 @@ let s:SUB_ARG_DICT.step_property = sort([
       \ 'teletext_page', 'teletext_subpage', 'teletext_mode',
       \ 'teletext_format', 'teletext_half_page'
       \])
-let s:SUB_ARG_DICT.set_property = sort(add(s:SUB_ARG_DICT.step_property, 'stream_pos'))
+let s:SUB_ARG_DICT.set_property = sort(s:SUB_ARG_DICT.step_property + ['stream_pos'])
 let s:SUB_ARG_DICT.get_property = sort(s:SUB_ARG_DICT.set_property + [
       \ 'pause',
       \ 'filename', 'path',
@@ -233,15 +233,15 @@ function! mplayer#cmd_complete(arglead, cmdline, cursorpos)
 endfunction
 
 function! mplayer#step_property_complete(arglead, cmdline, cursorpos)
-  return s:first_arg_complete(a:arglead, a:cmdline, s:SUB_ARG_DICT.step_property)
+  return s:first_arg_complete(a:arglead, a:cmdline, copy(s:SUB_ARG_DICT.step_property))
 endfunction
 
 function! mplayer#get_property_complete(arglead, cmdline, cursorpos)
-  return s:first_arg_complete(a:arglead, a:cmdline, s:SUB_ARG_DICT.get_property)
+  return s:first_arg_complete(a:arglead, a:cmdline, copy(s:SUB_ARG_DICT.get_property))
 endfunction
 
 function! mplayer#set_property_complete(arglead, cmdline, cursorpos)
-  return s:first_arg_complete(a:arglead, a:cmdline, s:SUB_ARG_DICT.set_property)
+  return s:first_arg_complete(a:arglead, a:cmdline, copy(s:SUB_ARG_DICT.set_property))
 endfunction
 
 function! mplayer#equlizer_complete(arglead, cmdline, cursorpos)
@@ -292,7 +292,7 @@ endfunction
 function! s:first_arg_complete(arglead, cmdline, candidates)
   let l:nargs = len(split(a:cmdline, '\s\+'))
   if l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
-    return filter(copy(a:candidates), 'v:val =~ "^" . a:arglead')
+    return filter(a:candidates, 'v:val =~ "^" . a:arglead')
   endif
 endfunction
 
