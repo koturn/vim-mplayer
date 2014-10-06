@@ -36,7 +36,7 @@ Command                                                  | Description
 ```MPlayerSetProperty <property> <values> ...```         | Set a value to the specified property.
 ```MPlayerShowCommandList```                             | Show slave mode commands.
 ```MPlayerShowFileInfo```                                | Show the file information of the song which currently playing.
-```MPlayerSpeed <value>```                               | Set the play speed of the mplayer.
+```MPlayerSpeed <value>```                               | Set the play speed of the mplayer. When bang is added, don't keep pitch.
 ```MPlayerStepProperty <property> <value> <direction>``` | Change a property by value, or increase by a default if value is not given or zero.
 ```MPlayerStop```                                        | Stop the mplayer (kill process of the mplayer)
 ```MPlayerToggleMute```                                  | Toggle mute or not.

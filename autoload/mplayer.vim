@@ -159,6 +159,15 @@ function! mplayer#set_seek(pos)
   endif
 endfunction
 
+function! mplayer#set_speed(speed, is_scaletempo)
+  if a:is_scaletempo
+    call mplayer#send_command('af_add scaletempo')
+  else
+    call mplayer#send_command('af_del scaletempo')
+  endif
+  call mplayer#send_command('speed_set ' . a:speed)
+endfunction
+
 function! mplayer#set_equalizer(band_str)
   if has_key(s:eq_presets, a:band_str)
     call mplayer#send_command('af_eq_set_bands ' . s:eq_presets[a:band_str])
