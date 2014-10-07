@@ -9,7 +9,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
-let g:mplayer#command = get(g:, 'mplayer#command', 'mplayer')
+let g:mplayer#mplayer = get(g:, 'mplayer#command', 'mplayer')
 if has('win32')
   let g:mplayer#option = get(g:, 'mplayer#option',
         \ '-idle -quiet -slave -af equalizer=0:0:0:0:0:0:0:0:0:0 -vo direct3d')
@@ -95,7 +95,7 @@ lockvar s:SUB_ARG_DICT
 
 
 function! mplayer#play(...)
-  if !executable(g:mplayer#command)
+  if !executable(g:mplayer#mplayer)
     echoerr 'Error: Please install mplayer.'
     return
   endif
@@ -104,14 +104,14 @@ function! mplayer#play(...)
     return
   endif
   call mplayer#stop()
-  call s:PM.touch(s:PROCESS_NAME, g:mplayer#command . ' ' . g:mplayer#option)
+  call s:PM.touch(s:PROCESS_NAME, g:mplayer#mplayer . ' ' . g:mplayer#option)
   call s:read()
   call s:enqueue(s:make_loadcmds(a:000))
 endfunction
 
 function! mplayer#enqueue(...)
   if !mplayer#is_playing()
-    call s:PM.touch(s:PROCESS_NAME, g:mplayer#command . ' ' . g:mplayer#option)
+    call s:PM.touch(s:PROCESS_NAME, g:mplayer#mplayer . ' ' . g:mplayer#option)
     call s:read()
   endif
   call s:enqueue(s:make_loadcmds(a:000))
@@ -133,17 +133,17 @@ endfunction
 
 function! mplayer#next(...)
   let l:n = get(a:, 1, 1)
-  call mplayer#send_command('pt_step ' . l:n)
+  call mplayer#command('pt_step ' . l:n)
   call s:read()
 endfunction
 
 function! mplayer#prev(...)
   let l:n = -get(a:, 1, 1)
-  call mplayer#send_command('pt_step ' . l:n)
+  call mplayer#command('pt_step ' . l:n)
   call s:read()
 endfunction
 
-function! mplayer#send_command(cmd, ...)
+function! mplayer#command(cmd, ...)
   if !mplayer#is_playing() | return | endif
   let l:is_iconv = get(a:, 1, 0)
   call s:writeln(a:cmd)
@@ -153,26 +153,26 @@ endfunction
 function! mplayer#set_seek(pos)
   let l:lastchar = a:pos[len(a:pos) - 1]
   if l:lastchar ==# '%'
-    call mplayer#send_command('seek ' . a:pos . ' 1')
+    call mplayer#command('seek ' . a:pos . ' 1')
   elseif l:lastchar ==# 's' || l:lastchar =~# '\d'
-    call mplayer#send_command('seek ' . a:pos . ' 2')
+    call mplayer#command('seek ' . a:pos . ' 2')
   endif
 endfunction
 
 function! mplayer#set_speed(speed, is_scaletempo)
   if a:is_scaletempo
-    call mplayer#send_command('af_add scaletempo')
+    call mplayer#command('af_add scaletempo')
   else
-    call mplayer#send_command('af_del scaletempo')
+    call mplayer#command('af_del scaletempo')
   endif
-  call mplayer#send_command('speed_set ' . a:speed)
+  call mplayer#command('speed_set ' . a:speed)
 endfunction
 
 function! mplayer#set_equalizer(band_str)
   if has_key(s:eq_presets, a:band_str)
-    call mplayer#send_command('af_eq_set_bands ' . s:eq_presets[a:band_str])
+    call mplayer#command('af_eq_set_bands ' . s:eq_presets[a:band_str])
   else
-    call mplayer#send_command('af_eq_set_bands ' . a:band_str)
+    call mplayer#command('af_eq_set_bands ' . a:band_str)
   endif
 endfunction
 
@@ -204,7 +204,7 @@ endfunction
 
 function! mplayer#show_cmdlist()
   if s:PM.is_available()
-    echo vimproc#system(g:mplayer#command . ' -input cmdlist')
+    echo vimproc#system(g:mplayer#mplayer . ' -input cmdlist')
   else
     echoerr 'Error: vimproc is unavailable.'
   endif
@@ -225,7 +225,7 @@ endfunction
 
 function! mplayer#cmd_complete(arglead, cmdline, cursorpos)
   if !exists('s:cmd_complete_cache')
-    let l:cmdlist = vimproc#system(g:mplayer#command . ' -input cmdlist')
+    let l:cmdlist = vimproc#system(g:mplayer#mplayer . ' -input cmdlist')
     let s:cmd_complete_cache = map(split(l:cmdlist, "\n"), 'split(v:val, " \+*")[0]')
   endif
   let l:args = split(a:cmdline, '\s\+')

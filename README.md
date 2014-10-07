@@ -23,6 +23,7 @@ Command                                                  | Description
 ---------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------
 ```MPlayer <file or directory> ...```                    | Play back specified files.
 ```MPlayerEnqueue <file or directory> ...```             | Add the files to the current playlist.
+```MPlayerCommand <arg> ...```                           | Send slave mode commands to the mplayer.
 ```MPlayerEqualizer <preset name or band string>```      | Set the equalizer of the mplayer.
 ```MPlayerGetProperty <property>```                      | Print out the current value of a property.
 ```MPlayerLoop <the number of loop>```                   | Specify the number of loop. 0 means infinite loop, -1 means no loop.
@@ -32,7 +33,6 @@ Command                                                  | Description
 ```MPlayerSeek <position>```                             | Seek to the specified position. Argument format is ```.*%``` (percent based position) or ```.*s``` (seconds based position)
 ```MPlayerSeekToEnd```                                   | Seek to the end of file.
 ```MPlayerSeekToHead```                                  | Seek to the head of file.
-```MPlayerSendCommand <arg> ...```                       | Send slave mode commands to the mplayer.
 ```MPlayerSetProperty <property> <values> ...```         | Set a value to the specified property.
 ```MPlayerShowCommandList```                             | Show slave mode commands.
 ```MPlayerShowFileInfo```                                | Show the file information of the song which currently playing.
