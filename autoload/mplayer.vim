@@ -147,7 +147,8 @@ function! mplayer#command(cmd, ...)
   if !mplayer#is_playing() | return | endif
   let l:is_iconv = get(a:, 1, 0)
   call s:writeln(a:cmd)
-  echo l:is_iconv ? iconv(s:read(), &tenc, &enc) : s:read()
+  let l:str = l:is_iconv ? iconv(s:read(), &tenc, &enc) : s:read()
+  echo substitute(l:str, "^\e[A\r\e[K", '', '')
 endfunction
 
 function! mplayer#set_seek(pos)
@@ -295,7 +296,7 @@ function! s:make_loadcmds(args)
 endfunction
 
 function! s:process_file(file)
-  return (a:file =~# '\.\(m3u\|m3u8\|pls\|wax\|wpl\)$' ? 'loadlist ' : 'loadfile ') . a:file . ' 1'
+  return (a:file =~# '\.\(m3u\|m3u8\|pls\|wax\|wpl\|xspf\)$' ? 'loadlist ' : 'loadfile ') . a:file . ' 1'
 endfunction
 
 function! s:first_arg_complete(arglead, cmdline, candidates)
