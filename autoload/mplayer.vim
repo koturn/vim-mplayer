@@ -25,14 +25,15 @@ let s:PM = s:V.import('ProcessManager')
 let s:PROCESS_NAME = 'mplayer' | lockvar s:PROCESS_NAME
 let s:WAIT_TIME = 0.05 | lockvar s:WAIT_TIME
 let s:EXIT_KEYCODE = char2nr('q') | lockvar s:EXIT_KEYCODE
+let s:LINE_BREAK = has('win32') ? "\r\n" : "\n" | lockvar s:LINE_BREAK
 let s:DUMMY_COMMAND = 'get_property __NONE__'
-let s:DUMMY_PATTERN = '.*ANS_ERROR=PROPERTY_UNKNOWN' . (has('win32') ? "\r\n" : "\n")
+let s:DUMMY_PATTERN = '.*ANS_ERROR=PROPERTY_UNKNOWN' . s:LINE_BREAK
 let s:INFO_COMMANDS = [
       \ 'get_percent_pos', 'get_time_pos', 'get_time_length', 'get_file_name',
-      \ 'get_video_codec', 'get_video_bitrate', 'get_video_resolution',
-      \ 'get_audio_codec', 'get_audio_bitrate', 'get_audio_samples',
       \ 'get_meta_title', 'get_meta_artist', 'get_meta_album', 'get_meta_year',
-      \ 'get_meta_comment', 'get_meta_track', 'get_meta_genre'
+      \ 'get_meta_comment', 'get_meta_track', 'get_meta_genre',
+      \ 'get_audio_codec', 'get_audio_bitrate', 'get_audio_samples',
+      \ 'get_video_codec', 'get_video_bitrate', 'get_video_resolution'
       \]
 let s:KEY_ACTION_DICT = {
       \ "\<Left>": 'seek -10',
@@ -199,8 +200,28 @@ function! mplayer#show_file_info()
     call s:PM.writeln(s:PROCESS_NAME, l:cmd)
   endfor
   let l:text = substitute(iconv(s:read(), &tenc, &enc), "'", '', 'g')
-  let l:answers = map(split(l:text, "\n"), 'substitute(v:val, "^ANS_\\(.*\\)=\\(.*\\)", "\\1: \\2", "g")')
-  echo join(l:answers, "\n")
+  let l:answers = map(split(l:text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.*=\\(.*\\)", "\\1", "g")')
+  echo '[STANDARD INFORMATION]'
+  echo '  posiotion: ' s:to_timestr(l:answers[1]) '/' s:to_timestr(l:answers[2]) ' (' . l:answers[0] . '%)'
+  echo '  filename:  ' l:answers[3]
+  echo '[META DATA]'
+  echo '  title:     ' l:answers[4]
+  echo '  artist:    ' l:answers[5]
+  echo '  album:     ' l:answers[6]
+  echo '  year:      ' l:answers[7]
+  echo '  comment:   ' l:answers[8]
+  echo '  track:     ' l:answers[9]
+  echo '  genre:     ' l:answers[10]
+  echo '[AUDIO]'
+  echo '  codec:     ' l:answers[11]
+  echo '  bitrate:   ' l:answers[12]
+  echo '  sample:    ' l:answers[13]
+  if l:answers[14] !=# '' && l:answers[15] !=# '' && l:answers[16] !=# ''
+    echo '[VIDEO]'
+    echo '  codec:     ' l:answers[14]
+    echo '  bitrate:   ' l:answers[15]
+    echo '  resolution:' l:answers[16]
+  endif
 endfunction
 
 function! mplayer#show_cmdlist()
@@ -297,6 +318,16 @@ endfunction
 
 function! s:process_file(file)
   return (a:file =~# '\.\(m3u\|m3u8\|pls\|wax\|wpl\|xspf\)$' ? 'loadlist ' : 'loadfile ') . a:file . ' 1'
+endfunction
+
+function! s:to_timestr(secstr)
+  let l:second = str2nr(a:secstr)
+  let l:dec_part = str2float(a:secstr) - l:second
+  let l:hour = a:secstr / 3600
+  let l:second = a:secstr % 3600
+  let l:minute = l:second / 60
+  let l:second = l:second % 60
+  return printf('%02d:%02d:%02d.%1d', l:hour, l:minute, l:second, float2nr(l:dec_part * 10))
 endfunction
 
 function! s:first_arg_complete(arglead, cmdline, candidates)
