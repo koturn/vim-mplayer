@@ -153,11 +153,14 @@ function! mplayer#command(cmd, ...)
 endfunction
 
 function! mplayer#set_seek(pos)
+  let l:second = s:to_second(a:pos)
   let l:lastchar = a:pos[len(a:pos) - 1]
-  if l:lastchar ==# '%'
-    call mplayer#command('seek ' . a:pos . ' 1')
+  if l:second != -1
+    call mplayer#command('seek ' . l:second . ' 2')
   elseif l:lastchar ==# 's' || l:lastchar =~# '\d'
     call mplayer#command('seek ' . a:pos . ' 2')
+  elseif l:lastchar ==# '%'
+    call mplayer#command('seek ' . a:pos . ' 1')
   endif
 endfunction
 
@@ -248,7 +251,7 @@ endfunction
 function! mplayer#cmd_complete(arglead, cmdline, cursorpos)
   if !exists('s:cmd_complete_cache')
     let l:cmdlist = vimproc#system(g:mplayer#mplayer . ' -input cmdlist')
-    let s:cmd_complete_cache = map(split(l:cmdlist, "\n"), 'split(v:val, " \+*")[0]')
+    let s:cmd_complete_cache = sort(map(split(l:cmdlist, "\n"), 'split(v:val, " \+*")[0]'))
   endif
   let l:args = split(a:cmdline, '\s\+')
   let l:nargs = len(l:args)
@@ -328,6 +331,18 @@ function! s:to_timestr(secstr)
   let l:minute = l:second / 60
   let l:second = l:second % 60
   return printf('%02d:%02d:%02d.%1d', l:hour, l:minute, l:second, float2nr(l:dec_part * 10))
+endfunction
+
+function! s:to_second(timestr)
+  if a:timestr =~# '^\d\+:\d\+:\d\+\(\.\d\+\)\?$'
+    let parts = split(a:timestr, ':')
+    return str2nr(parts[0]) * 3600 + str2nr(parts[1]) * 60 + str2nr(parts[2])
+  elseif a:timestr =~# '^\d\+:\d\+\(\.\d\+\)\?$'
+    let parts = split(a:timestr, ':')
+    return str2nr(parts[0]) * 60 + str2nr(parts[1])
+  else
+    return -1
+  endif
 endfunction
 
 function! s:first_arg_complete(arglead, cmdline, candidates)
