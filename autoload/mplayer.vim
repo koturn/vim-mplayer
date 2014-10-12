@@ -9,7 +9,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
-let g:mplayer#mplayer = get(g:, 'mplayer#command', 'mplayer')
+let g:mplayer#mplayer = get(g:, 'mplayer#mplayer', 'mplayer')
 if has('win32')
   let g:mplayer#option = get(g:, 'mplayer#option',
         \ '-idle -quiet -slave -af equalizer=0:0:0:0:0:0:0:0:0:0 -vo direct3d')
@@ -263,7 +263,7 @@ function! mplayer#cmd_complete(arglead, cmdline, cursorpos)
   elseif l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
     let l:candidates = s:cmd_complete_cache
   endif
-  return filter(copy(l:candidates), 'v:val =~ "^" . a:arglead')
+  return filter(copy(l:candidates), 'stridx(v:val, a:arglead) == 0')
 endfunction
 
 function! mplayer#step_property_complete(arglead, cmdline, cursorpos)
@@ -348,7 +348,7 @@ endfunction
 function! s:first_arg_complete(arglead, cmdline, candidates)
   let l:nargs = len(split(a:cmdline, '\s\+'))
   if l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
-    return filter(a:candidates, 'v:val =~ "^" . a:arglead')
+    return filter(a:candidates, 'stridx(v:val, a:arglead) == 0')
   endif
 endfunction
 
