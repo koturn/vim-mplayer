@@ -19,7 +19,6 @@ else
 endif
 
 let s:V = vital#of('mplayer')
-let s:JSON = s:V.import('Web.JSON')
 let s:PM = s:V.import('ProcessManager')
 
 let s:PROCESS_NAME = 'mplayer' | lockvar s:PROCESS_NAME
@@ -203,7 +202,7 @@ function! mplayer#show_file_info()
     call s:PM.writeln(s:PROCESS_NAME, l:cmd)
   endfor
   let l:text = substitute(iconv(s:read(), &tenc, &enc), "'", '', 'g')
-  let l:answers = map(split(l:text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.*=\\(.*\\)", "\\1", "g")')
+  let l:answers = map(split(l:text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.\\+=\\(.*\\)", "\\1", "g")')
   echo '[STANDARD INFORMATION]'
   echo '  posiotion: ' s:to_timestr(l:answers[1]) '/' s:to_timestr(l:answers[2]) ' (' . l:answers[0] . '%)'
   echo '  filename:  ' l:answers[3]
@@ -251,7 +250,7 @@ endfunction
 function! mplayer#cmd_complete(arglead, cmdline, cursorpos)
   if !exists('s:cmd_complete_cache')
     let l:cmdlist = vimproc#system(g:mplayer#mplayer . ' -input cmdlist')
-    let s:cmd_complete_cache = sort(map(split(l:cmdlist, "\n"), 'split(v:val, " \+*")[0]'))
+    let s:cmd_complete_cache = sort(map(split(l:cmdlist, "\n"), 'split(v:val, " \\+")[0]'))
   endif
   let l:args = split(a:cmdline, '\s\+')
   let l:nargs = len(l:args)
@@ -326,8 +325,8 @@ endfunction
 function! s:to_timestr(secstr)
   let l:second = str2nr(a:secstr)
   let l:dec_part = str2float(a:secstr) - l:second
-  let l:hour = a:secstr / 3600
-  let l:second = a:secstr % 3600
+  let l:hour = l:second / 3600
+  let l:second = l:second % 3600
   let l:minute = l:second / 60
   let l:second = l:second % 60
   return printf('%02d:%02d:%02d.%1d', l:hour, l:minute, l:second, float2nr(l:dec_part * 10))
