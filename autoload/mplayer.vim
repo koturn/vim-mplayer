@@ -28,7 +28,7 @@ let s:LINE_BREAK = has('win32') ? "\r\n" : "\n" | lockvar s:LINE_BREAK
 let s:DUMMY_COMMAND = 'get_property __NONE__'
 let s:DUMMY_PATTERN = '.*ANS_ERROR=PROPERTY_UNKNOWN' . s:LINE_BREAK
 let s:INFO_COMMANDS = [
-      \ 'get_percent_pos', 'get_time_pos', 'get_time_length', 'get_file_name',
+      \ 'get_time_pos', 'get_time_length', 'get_percent_pos', 'get_file_name',
       \ 'get_meta_title', 'get_meta_artist', 'get_meta_album', 'get_meta_year',
       \ 'get_meta_comment', 'get_meta_track', 'get_meta_genre',
       \ 'get_audio_codec', 'get_audio_bitrate', 'get_audio_samples',
@@ -203,27 +203,35 @@ function! mplayer#show_file_info()
   endfor
   let l:text = substitute(iconv(s:read(), &tenc, &enc), "'", '', 'g')
   let l:answers = map(split(l:text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.\\+=\\(.*\\)", "\\1", "g")')
+  if len(l:answers) == 0 | return | endif
   echo '[STANDARD INFORMATION]'
-  echo '  posiotion: ' s:to_timestr(l:answers[1]) '/' s:to_timestr(l:answers[2]) ' (' . l:answers[0] . '%)'
-  echo '  filename:  ' l:answers[3]
-  echo '[META DATA]'
-  echo '  title:     ' l:answers[4]
-  echo '  artist:    ' l:answers[5]
-  echo '  album:     ' l:answers[6]
-  echo '  year:      ' l:answers[7]
-  echo '  comment:   ' l:answers[8]
-  echo '  track:     ' l:answers[9]
-  echo '  genre:     ' l:answers[10]
-  echo '[AUDIO]'
-  echo '  codec:     ' l:answers[11]
-  echo '  bitrate:   ' l:answers[12]
-  echo '  sample:    ' l:answers[13]
-  if l:answers[14] !=# '' && l:answers[15] !=# '' && l:answers[16] !=# ''
-    echo '[VIDEO]'
-    echo '  codec:     ' l:answers[14]
-    echo '  bitrate:   ' l:answers[15]
-    echo '  resolution:' l:answers[16]
-  endif
+  try
+    echo '  posiotion: ' s:to_timestr(l:answers[0]) '/' s:to_timestr(l:answers[1]) ' (' . l:answers[2] . '%)'
+    echo '  filename:  ' l:answers[3]
+    echo '[META DATA]'
+    echo '  title:     ' l:answers[4]
+    echo '  artist:    ' l:answers[5]
+    echo '  album:     ' l:answers[6]
+    echo '  year:      ' l:answers[7]
+    echo '  comment:   ' l:answers[8]
+    echo '  track:     ' l:answers[9]
+    echo '  genre:     ' l:answers[10]
+    echo '[AUDIO]'
+    echo '  codec:     ' l:answers[11]
+    echo '  bitrate:   ' l:answers[12]
+    echo '  sample:    ' l:answers[13]
+    if l:answers[14] !=# '' && l:answers[15] !=# '' && l:answers[16] !=# ''
+      echo '[VIDEO]'
+      echo '  codec:     ' l:answers[14]
+      echo '  bitrate:   ' l:answers[15]
+      echo '  resolution:' l:answers[16]
+    endif
+  catch /^Vim\%((\a\+)\)\=:E684: /
+    echon ' '
+    echohl ErrorMsg
+    echon '... Failed to get file information'
+    echohl None
+  endtry
 endfunction
 
 function! mplayer#show_cmdlist()
