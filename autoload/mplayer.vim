@@ -45,10 +45,28 @@ lockvar s:DUMMY_PATTERN
 lockvar s:INDO_COMMANDS
 
 let s:eq_presets = {
-      \ 'normal': '0:0:0:0:0:0:0:0:0:0',
+      \ 'acoustic': '0:1:2:0:0:0:0:0:2:2',
       \ 'bass': '2.25:2.0:1.75:1.50:1.25:1.00:0.75:0.5:0.25:0',
+      \ 'blues': '-1:0:2:1:0:0:0:0:-1:-3',
       \ 'classic': '0:3:3:1.5:0:0:0:0:1:1',
-      \ 'perfect': '0.75:1.5:2.25:1.75:1.5:1.25:1.75:2.25:2.75:2'
+      \ 'country': '-1:0:0:2:2:0:0:0:3:3',
+      \ 'dance': '-0.5:2:2.5:0.5:-0.5:-0.5:0:0:2:2',
+      \ 'eargasmExplosion': '0.75:1.5:2.25:1.75:1.5:1.25:1.75:1:2.75:2',
+      \ 'folk': '-1:0:1:0:2:0:0:0:2:0',
+      \ 'grunge': '-4:0:0:-2:0:0:2:3:0:-3',
+      \ 'jazz': '0:0:0:1.5:1.5:1.5:0:1:2:2',
+      \ 'metal': '-4:0:0:0:0:0:3:0:3:1',
+      \ 'new_age': '0:3:3:0:0:0:0:0:1:1',
+      \ 'normal': '0:0:0:0:0:0:0:0:0:0',
+      \ 'oldies': '-2:0:2:1:0:0:0:0:-2:-5',
+      \ 'opera': '0:0:0:1.5:2:1:2.5:1:0:0',
+      \ 'perfect': '0.75:1.5:2.25:1.75:1.5:1.25:1.75:2.25:2.75:2',
+      \ 'rap':  '-0.5:0:1:1:-0.5:-0.5:0:0:2:3',
+      \ 'reggae': '-0.5:0:0:-1.5:0:1.5:2:0:1.5:2',
+      \ 'rock': '-0.5:0.5:1:1.5:-0.5:-0.5:0:0:2:2',
+      \ 'speech': '-2:0:2:1:0:0:0:0:-2:-5',
+      \ 'swing': '-0.5:0:0:0:1.5:1.5:0:1:2:2',
+      \ 'techno': '-3:0.5:2:-0.5:-0.5:-1:0:0:2.5:2.5'
       \}
 let s:SUB_ARG_DICT = {}
 let s:SUB_ARG_DICT.dvdnav = sort([
@@ -286,7 +304,7 @@ function! mplayer#set_property_complete(arglead, cmdline, cursorpos)
 endfunction
 
 function! mplayer#equlizer_complete(arglead, cmdline, cursorpos)
-  return s:first_arg_complete(a:arglead, a:cmdline, keys(s:eq_presets))
+  return s:first_arg_complete(a:arglead, a:cmdline, sort(keys(s:eq_presets)))
 endfunction
 
 
