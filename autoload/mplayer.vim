@@ -21,6 +21,7 @@ endif
 let s:V = vital#of('mplayer')
 let s:PM = s:V.import('ProcessManager')
 
+let s:rt_sw = 0
 let s:PROCESS_NAME = 'mplayer' | lockvar s:PROCESS_NAME
 let s:WAIT_TIME = 0.05 | lockvar s:WAIT_TIME
 let s:EXIT_KEYCODE = char2nr('q') | lockvar s:EXIT_KEYCODE
@@ -137,6 +138,7 @@ endfunction
 
 function! mplayer#stop()
   if !mplayer#is_playing() | return | endif
+  call s:stop_rt_info()
   call s:PM.kill(s:PROCESS_NAME)
 endfunction
 
@@ -260,6 +262,24 @@ function! mplayer#show_cmdlist()
   endif
 endfunction
 
+function! mplayer#toggle_rt_timeinfo()
+  if s:rt_sw
+    call s:stop_rt_info()
+  else
+    call s:start_rt_info()
+  endif
+  let s:rt_sw = !s:rt_sw
+endfunction
+
+function! s:start_rt_info()
+  if !mplayer#is_playing() | return | endif
+  autocmd! MPlayer CursorHold,CursorHoldI * call s:update()
+endfunction
+
+function! s:stop_rt_info()
+  autocmd! MPlayer CursorHold,CursorHoldI
+endfunction
+
 function! mplayer#flush()
   if !mplayer#is_playing() | return | endif
   let l:r = s:PM.read(s:PROCESS_NAME, [])
@@ -367,6 +387,23 @@ function! s:to_second(timestr)
     return str2nr(parts[0]) * 60 + str2nr(parts[1])
   else
     return -1
+  endif
+endfunction
+
+function! s:update()
+  call s:show_timeinfo()
+  call feedkeys(mode() ==# 'i' ? "\<C-g>\<ESC>" : "g\<ESC>", 'n')
+endfunction
+
+function! s:show_timeinfo()
+  call s:PM.writeln(s:PROCESS_NAME, s:DUMMY_COMMAND)
+  call s:PM.writeln(s:PROCESS_NAME, 'get_time_pos')
+  call s:PM.writeln(s:PROCESS_NAME, 'get_time_length')
+  call s:PM.writeln(s:PROCESS_NAME, 'get_percent_pos')
+  let l:text = substitute(s:read(), "'", '', 'g')
+  let l:answers = map(split(l:text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.\\+=\\(.*\\)", "\\1", "g")')
+  if len(l:answers) == 3
+    echo '[MPlayer] position:' s:to_timestr(l:answers[0]) '/' s:to_timestr(l:answers[1]) ' (' . l:answers[2] . '%)'
   endif
 endfunction
 

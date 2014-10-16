@@ -41,6 +41,7 @@ Command                                                  | Description
 ```MPlayerStop```                                        | Stop the mplayer (kill process of the mplayer)
 ```MPlayerToggleMute```                                  | Toggle mute or not.
 ```MPlayerTogglePause```                                 | Toggle pause-state or not.
+```MPlayerToggleRTTimeInfo```                            | Toggle successively show or not show playback time.
 ```MPlayerVolume <value>```                              | Set the volume of the mplayer.
 
 
@@ -51,7 +52,7 @@ Command                                                  | Description
 
 ## Requirements
 
-- mplayer
+- [mplayer](http://www.mplayerhq.hu/design7/news.html)
 
 
 ## LICENSE
