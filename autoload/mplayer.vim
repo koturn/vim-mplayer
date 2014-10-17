@@ -104,7 +104,8 @@ let s:SUB_ARG_DICT.get_property = sort(s:SUB_ARG_DICT.set_property + [
       \ 'demuxer',
       \ 'stream_start', 'stream_end', 'stream_length', 'stream_time_pos',
       \ 'chapters', 'length',
-      \ 'metadata',
+      \ 'metadata', 'metadata/album', 'metadata/artist', 'metadata/comment',
+      \ 'metadata/genre', 'metadata/title', 'metadata/track','metadata/year',
       \ 'audio_format', 'audio_codec', 'audio_bitrate',
       \ 'samplerate', 'channels',
       \ 'video_format', 'video_codec', 'video_bitrate',
@@ -168,7 +169,7 @@ function! mplayer#command(cmd, ...)
   let l:is_iconv = get(a:, 1, 0)
   call s:writeln(a:cmd)
   let l:str = l:is_iconv ? iconv(s:read(), &tenc, &enc) : s:read()
-  echo substitute(l:str, "^\e[A\r\e[K", '', '')
+  echo substitute(substitute(l:str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\(.*\)$', '\1', '')
 endfunction
 
 function! mplayer#set_seek(pos)
@@ -222,7 +223,7 @@ function! mplayer#show_file_info()
     call s:PM.writeln(s:PROCESS_NAME, l:cmd)
   endfor
   let l:text = substitute(iconv(s:read(), &tenc, &enc), "'", '', 'g')
-  let l:answers = map(split(l:text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.\\+=\\(.*\\)", "\\1", "g")')
+  let l:answers = map(split(l:text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.\\+=\\(.*\\)$", "\\1", "")')
   if len(l:answers) == 0 | return | endif
   echo '[STANDARD INFORMATION]'
   try
@@ -401,7 +402,7 @@ function! s:show_timeinfo()
   call s:PM.writeln(s:PROCESS_NAME, 'get_time_length')
   call s:PM.writeln(s:PROCESS_NAME, 'get_percent_pos')
   let l:text = substitute(s:read(), "'", '', 'g')
-  let l:answers = map(split(l:text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.\\+=\\(.*\\)", "\\1", "g")')
+  let l:answers = map(split(l:text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.\\+=\\(.*\\)$", "\\1", "")')
   if len(l:answers) == 3
     echo '[MPlayer] position:' s:to_timestr(l:answers[0]) '/' s:to_timestr(l:answers[1]) ' (' . l:answers[2] . '%)'
   endif
