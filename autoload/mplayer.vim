@@ -124,9 +124,19 @@ function! mplayer#play(...)
     return
   endif
   call mplayer#stop()
-  call s:PM.touch(s:PROCESS_NAME, g:mplayer#mplayer . ' ' . g:mplayer#option)
+  let l:pos = match(a:000, '^--$')
+  if l:pos == -1
+    let l:pos = len(l:pos)
+  endif
+  let l:filelist = a:000[: l:pos - 1]
+  let l:custom_option = join(a:000[l:pos + 1 :], ' ')
+  call s:PM.touch(
+        \ s:PROCESS_NAME, g:mplayer#mplayer . ' '
+        \ . g:mplayer#option . ' '
+        \ . l:custom_option
+        \)
   call s:read()
-  call s:enqueue(s:make_loadcmds(a:000))
+  call s:enqueue(s:make_loadcmds(l:filelist))
 endfunction
 
 function! mplayer#enqueue(...)
