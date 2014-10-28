@@ -30,11 +30,11 @@ command! -bar -nargs=0 MPlayerOperateWithKey call mplayer#operate_with_key()
 command! -bar -nargs=? MPlayerPrev call mplayer#prev(<f-args>)
 command! -bar -nargs=? MPlayerNext call mplayer#next(<f-args>)
 command! -bar -nargs=0 MPlayerShowFileInfo call mplayer#show_file_info()
-command! -bar -nargs=0 MPlayerShowCommandList call mplayer#show_cmdlist()
 command! -bar -nargs=+ -complete=customlist,mplayer#cmd_complete MPlayerCommand call mplayer#command(<q-args>, 1)
 command! -bar -nargs=1 -complete=customlist,mplayer#get_property_complete MPlayerGetProperty call mplayer#command('get_property ' . <q-args>, 1)
 command! -bar -nargs=+ -complete=customlist,mplayer#set_property_complete MPlayerSetProperty call mplayer#command('set_property ' . <q-args>, 1)
 command! -bar -nargs=+ -complete=customlist,mplayer#step_property_complete MPlayerStepProperty call mplayer#command('step_property ' . <q-args>, 1)
+command! -bar -nargs=? -complete=customlist,mplayer#help_complete  MPlayerHelp call mplayer#help(<f-args>)
 
 command! -bar -nargs=0 MPlayerFlush call mplayer#flush()
 

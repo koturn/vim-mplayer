@@ -113,6 +113,15 @@ let s:SUB_ARG_DICT.get_property = sort(s:SUB_ARG_DICT.set_property + [
       \])
 lockvar s:SUB_ARG_DICT
 
+let s:HELP_DICT = {
+      \ 'cmdlist': '-input cmdlist',
+      \ 'af': '-af help',
+      \ 'ao': '-ao help',
+      \ 'vf': '-vf help',
+      \ 'vo': '-vo help'
+      \}
+lockvar s:HELP_DICT
+
 
 function! mplayer#play(...)
   if !executable(g:mplayer#mplayer)
@@ -265,9 +274,12 @@ function! mplayer#show_file_info()
   endtry
 endfunction
 
-function! mplayer#show_cmdlist()
+function! mplayer#help(...)
   if s:PM.is_available()
-    echo vimproc#system(g:mplayer#mplayer . ' -input cmdlist')
+    let l:arg = get(a:, 1, 'cmdlist')
+    if has_key(s:HELP_DICT, l:arg)
+      echo vimproc#system(g:mplayer#mplayer . ' ' . s:HELP_DICT[l:arg])
+    endif
   else
     echoerr 'Error: vimproc is unavailable.'
   endif
@@ -336,6 +348,10 @@ endfunction
 
 function! mplayer#equlizer_complete(arglead, cmdline, cursorpos)
   return s:first_arg_complete(a:arglead, a:cmdline, sort(keys(s:eq_presets)))
+endfunction
+
+function! mplayer#help_complete(arglead, cmdline, cursorpos)
+  return s:first_arg_complete(a:arglead, a:cmdline, sort(keys(s:HELP_DICT)))
 endfunction
 
 
