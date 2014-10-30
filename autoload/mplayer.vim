@@ -9,14 +9,19 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
+if has('win32unix')
+  let g:mplayer#use_win_mplayer_in_cygwin = get(g:, 'mplayer#use_win_mplayer_in_cygwin', 0)
+endif
+
 let g:mplayer#mplayer = get(g:, 'mplayer#mplayer', 'mplayer')
-if has('win32')
+if has('win32') || has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
   let g:mplayer#option = get(g:, 'mplayer#option',
         \ '-idle -quiet -slave -af equalizer=0:0:0:0:0:0:0:0:0:0 -vo direct3d')
 else
   let g:mplayer#option = get(g:, 'mplayer#option',
         \ '-idle -quiet -slave -af equalizer=0:0:0:0:0:0:0:0:0:0')
 endif
+
 
 let s:V = vital#of('mplayer')
 let s:PM = s:V.import('ProcessManager')
@@ -25,7 +30,18 @@ let s:rt_sw = 0
 let s:PROCESS_NAME = 'mplayer' | lockvar s:PROCESS_NAME
 let s:WAIT_TIME = 0.05 | lockvar s:WAIT_TIME
 let s:EXIT_KEYCODE = char2nr('q') | lockvar s:EXIT_KEYCODE
-let s:LINE_BREAK = has('win32') ? "\r\n" : "\n" | lockvar s:LINE_BREAK
+if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
+  let s:TENC = 'cp932'
+else
+  let s:TENC = &termencoding
+endif
+lockvar s:TENC
+if has('win32') || has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
+  let s:LINE_BREAK = "\r\n"
+else
+  let s:LINE_BREAK = "\n"
+endif
+lockvar s:LINE_BREAK
 let s:DUMMY_COMMAND = 'get_property __NONE__'
 let s:DUMMY_PATTERN = '.*ANS_ERROR=PROPERTY_UNKNOWN' . s:LINE_BREAK
 let s:INFO_COMMANDS = [
@@ -190,7 +206,7 @@ function! mplayer#command(cmd, ...)
   if !mplayer#is_playing() | return | endif
   let l:is_iconv = get(a:, 1, 0)
   call s:writeln(a:cmd)
-  let l:str = l:is_iconv ? iconv(s:read(), &tenc, &enc) : s:read()
+  let l:str = l:is_iconv ? iconv(s:read(), s:TENC, &enc) : s:read()
   echo substitute(substitute(l:str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\(.*\)$', '\1', '')
 endfunction
 
@@ -244,7 +260,7 @@ function! mplayer#show_file_info()
   for l:cmd in s:INFO_COMMANDS
     call s:PM.writeln(s:PROCESS_NAME, l:cmd)
   endfor
-  let l:text = substitute(iconv(s:read(), &tenc, &enc), "'", '', 'g')
+  let l:text = substitute(iconv(s:read(), s:TENC, &enc), "'", '', 'g')
   let l:answers = map(split(l:text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.\\+=\\(.*\\)$", "\\1", "")')
   if len(l:answers) == 0 | return | endif
   echo '[STANDARD INFORMATION]'
@@ -391,7 +407,11 @@ function! s:make_loadcmds(args)
       endif
     endfor
   endfor
-  return l:filelist
+  if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
+    return map(l:filelist, 'substitute(v:val, "/cygdrive/\\(\\a\\)", "\\1:", "")')
+  else
+    return l:filelist
+  endif
 endfunction
 
 function! s:process_file(file)
