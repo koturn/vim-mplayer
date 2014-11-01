@@ -192,21 +192,23 @@ endfunction
 
 function! mplayer#next(...)
   let l:n = get(a:, 1, 1)
-  call mplayer#command('pt_step ' . l:n)
+  echo iconv(s:command('pt_step ' . l:n), s:TENC, &enc)
   call s:read()
 endfunction
 
 function! mplayer#prev(...)
   let l:n = -get(a:, 1, 1)
-  call mplayer#command('pt_step ' . l:n)
+  echo iconv(s:command('pt_step ' . l:n), s:TENC, &enc)
   call s:read()
 endfunction
 
 function! mplayer#command(cmd, ...)
   if !mplayer#is_playing() | return | endif
   let l:is_iconv = get(a:, 1, 0)
-  call s:writeln(a:cmd)
-  let l:str = l:is_iconv ? iconv(s:read(), s:TENC, &enc) : s:read()
+  let l:str = s:command(a:cmd)
+  if l:is_iconv
+    let l:str = iconv(l:str, s:TENC, &enc)
+  endif
   echo substitute(substitute(l:str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\(.*\)$', '\1', '')
 endfunction
 
@@ -214,28 +216,28 @@ function! mplayer#set_seek(pos)
   let l:second = s:to_second(a:pos)
   let l:lastchar = a:pos[len(a:pos) - 1]
   if l:second != -1
-    call mplayer#command('seek ' . l:second . ' 2')
+    echo s:command('seek ' . l:second . ' 2')
   elseif l:lastchar ==# 's' || l:lastchar =~# '\d'
-    call mplayer#command('seek ' . a:pos . ' 2')
+    echo s:command('seek ' . a:pos . ' 2')
   elseif l:lastchar ==# '%'
-    call mplayer#command('seek ' . a:pos . ' 1')
+    echo s:command('seek ' . a:pos . ' 1')
   endif
 endfunction
 
 function! mplayer#set_speed(speed, is_scaletempo)
   if a:is_scaletempo
-    call mplayer#command('af_add scaletempo')
+    echo s:command('af_add scaletempo')
   else
-    call mplayer#command('af_del scaletempo')
+    echo s:command('af_del scaletempo')
   endif
-  call mplayer#command('speed_set ' . a:speed)
+  echo s:command('speed_set ' . a:speed)
 endfunction
 
 function! mplayer#set_equalizer(band_str)
   if has_key(s:eq_presets, a:band_str)
-    call mplayer#command('af_eq_set_bands ' . s:eq_presets[a:band_str])
+    call s:command('af_eq_set_bands ' . s:eq_presets[a:band_str])
   else
-    call mplayer#command('af_eq_set_bands ' . a:band_str)
+    call s:command('af_eq_set_bands ' . a:band_str)
   endif
 endfunction
 
@@ -379,6 +381,12 @@ function! s:enqueue(loadcmds)
     call s:writeln(l:cmd)
   endfor
   call s:read(s:WAIT_TIME)
+endfunction
+
+function! s:command(cmd)
+  if !mplayer#is_playing() | return | endif
+  call s:writeln(a:cmd)
+  return s:read()
 endfunction
 
 function! s:writeln(cmd)
