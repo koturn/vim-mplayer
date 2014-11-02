@@ -342,7 +342,7 @@ function! mplayer#cmd_complete(arglead, cmdline, cursorpos)
     let l:cmdlist = vimproc#system(g:mplayer#mplayer . ' -input cmdlist')
     let s:cmd_complete_cache = sort(map(split(l:cmdlist, "\n"), 'split(v:val, " \\+")[0]'))
   endif
-  let l:args = split(a:cmdline, '\s\+')
+  let l:args = split(split(a:cmdline, '\\\@<!|')[-1], '\s\+')
   let l:nargs = len(l:args)
   let l:candidates = []
   if has_key(s:SUB_ARG_DICT, l:args[-1])
@@ -352,27 +352,27 @@ function! mplayer#cmd_complete(arglead, cmdline, cursorpos)
   elseif l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
     let l:candidates = s:cmd_complete_cache
   endif
-  return filter(copy(l:candidates), 'stridx(v:val, a:arglead) == 0')
+  return s:match_filter(copy(l:candidates), a:arglead)
 endfunction
 
 function! mplayer#step_property_complete(arglead, cmdline, cursorpos)
-  return s:first_arg_complete(a:arglead, a:cmdline, copy(s:SUB_ARG_DICT.step_property))
+  return s:first_arg_complete(copy(s:SUB_ARG_DICT.step_property), a:arglead, a:cmdline)
 endfunction
 
 function! mplayer#get_property_complete(arglead, cmdline, cursorpos)
-  return s:first_arg_complete(a:arglead, a:cmdline, copy(s:SUB_ARG_DICT.get_property))
+  return s:first_arg_complete(copy(s:SUB_ARG_DICT.get_property), a:arglead, a:cmdline)
 endfunction
 
 function! mplayer#set_property_complete(arglead, cmdline, cursorpos)
-  return s:first_arg_complete(a:arglead, a:cmdline, copy(s:SUB_ARG_DICT.set_property))
+  return s:first_arg_complete(copy(s:SUB_ARG_DICT.set_property), a:arglead, a:cmdline)
 endfunction
 
 function! mplayer#equlizer_complete(arglead, cmdline, cursorpos)
-  return s:first_arg_complete(a:arglead, a:cmdline, sort(keys(s:eq_presets)))
+  return s:first_arg_complete(sort(keys(s:eq_presets)), a:arglead, a:cmdline)
 endfunction
 
 function! mplayer#help_complete(arglead, cmdline, cursorpos)
-  return s:first_arg_complete(a:arglead, a:cmdline, sort(keys(s:HELP_DICT)))
+  return s:first_arg_complete(sort(keys(s:HELP_DICT)), a:arglead, a:cmdline)
 endfunction
 
 
@@ -465,11 +465,15 @@ function! s:show_timeinfo()
   endif
 endfunction
 
-function! s:first_arg_complete(arglead, cmdline, candidates)
-  let l:nargs = len(split(a:cmdline, '\s\+'))
+function! s:first_arg_complete(candidates, arglead, cmdline)
+  let l:nargs = len(split(split(a:cmdline, '\\\@<!|')[-1], '\s\+'))
   if l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
-    return filter(a:candidates, 'stridx(v:val, a:arglead) == 0')
+    return s:match_filter(a:candidates, a:arglead)
   endif
+endfunction
+
+function! s:match_filter(candidates, arglead)
+  return filter(a:candidates, 'stridx(tolower(v:val), tolower(a:arglead)) == 0')
 endfunction
 
 
