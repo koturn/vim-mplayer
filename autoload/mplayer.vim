@@ -24,6 +24,7 @@ endif
 
 
 let s:V = vital#of('mplayer')
+let s:P = s:V.import('Process')
 let s:PM = s:V.import('ProcessManager')
 
 let s:rt_sw = 0
@@ -296,13 +297,9 @@ function! mplayer#show_file_info()
 endfunction
 
 function! mplayer#help(...)
-  if s:PM.is_available()
-    let l:arg = get(a:, 1, 'cmdlist')
-    if has_key(s:HELP_DICT, l:arg)
-      echo vimproc#system(g:mplayer#mplayer . ' ' . s:HELP_DICT[l:arg])
-    endif
-  else
-    echoerr 'Error: vimproc is unavailable.'
+  let l:arg = get(a:, 1, 'cmdlist')
+  if has_key(s:HELP_DICT, l:arg)
+    echo s:P.system(g:mplayer#mplayer . ' ' . s:HELP_DICT[l:arg])
   endif
 endfunction
 
@@ -339,10 +336,10 @@ endfunction
 
 function! mplayer#cmd_complete(arglead, cmdline, cursorpos)
   if !exists('s:cmd_complete_cache')
-    let l:cmdlist = vimproc#system(g:mplayer#mplayer . ' -input cmdlist')
+    let l:cmdlist = s:P.system(g:mplayer#mplayer . ' -input cmdlist')
     let s:cmd_complete_cache = sort(map(split(l:cmdlist, "\n"), 'split(v:val, " \\+")[0]'))
   endif
-  let l:args = split(split(a:cmdline, '\\\@<!|')[-1], '\s\+')
+  let l:args = split(split(a:cmdline, '\s*\\\@<!|\s*')[-1], '\s\+')
   let l:nargs = len(l:args)
   let l:candidates = []
   if has_key(s:SUB_ARG_DICT, l:args[-1])
@@ -466,7 +463,7 @@ function! s:show_timeinfo()
 endfunction
 
 function! s:first_arg_complete(candidates, arglead, cmdline)
-  let l:nargs = len(split(split(a:cmdline, '\\\@<!|')[-1], '\s\+'))
+  let l:nargs = len(split(split(a:cmdline, '\s*\\\@<!|\s*')[-1], '\s\+'))
   if l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
     return s:match_filter(a:candidates, a:arglead)
   endif
