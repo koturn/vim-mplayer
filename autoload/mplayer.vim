@@ -399,28 +399,28 @@ function! s:read(...) abort
 endfunction
 
 function! s:make_loadcmds(args) abort
-  let filelist = []
+  let loadcmds = []
   for arg in a:args
     for item in split(expand(arg), "\n")
       if isdirectory(item)
         let dir_items = split(globpath(item, '*'), "\n")
-        let filelist += map(filter(dir_items, 'filereadable(v:val)'), 's:process_file(v:val)')
+        let loadcmds += map(filter(dir_items, 'filereadable(v:val)'), 's:process_file(v:val)')
       elseif item =~# '^\(cdda\|cddb\|dvd\|file\|ftp\|gopher\|tv\|vcd\|http\|https\)://'
-        call add(filelist, 'loadfile ' . item . ' 1')
+        call add(loadcmds, 'loadfile ' . item . ' 1')
       else
-        call add(filelist, s:process_file(expand(item)))
+        call add(loadcmds, s:process_file(expand(item)))
       endif
     endfor
   endfor
   if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
-    return map(filelist, 'substitute(v:val, "/cygdrive/\\(\\a\\)", "\\1:", "")')
+    return map(loadcmds, 'substitute(v:val, "/cygdrive/\\(\\a\\)", "\\1:", "")')
   else
-    return filelist
+    return loadcmds
   endif
 endfunction
 
 function! s:process_file(file) abort
-  return (a:file =~# '\.\(m3u\|m3u8\|pls\|wax\|wpl\|xspf\)$' ? 'loadlist ' : 'loadfile ') . a:file . ' 1'
+  return (a:file =~# '\.\(m3u\|m3u8\|pls\|wax\|wpl\|xspf\)$' ? 'loadlist ' : 'loadfile ') . string(a:file) . ' 1'
 endfunction
 
 function! s:to_timestr(secstr) abort
