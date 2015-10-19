@@ -153,19 +153,19 @@ function! mplayer#play(...) abort
     return
   endif
   call mplayer#stop()
-  let l:pos = match(a:000, '^--$')
-  if l:pos == -1
-    let l:pos = len(l:pos)
+  let pos = match(a:000, '^--$')
+  if pos == -1
+    let pos = len(pos)
   endif
-  let l:filelist = a:000[: l:pos - 1]
-  let l:custom_option = join(a:000[l:pos + 1 :], ' ')
+  let filelist = a:000[: pos - 1]
+  let custom_option = join(a:000[pos + 1 :], ' ')
   call s:PM.touch(
         \ s:PROCESS_NAME, g:mplayer#mplayer . ' '
         \ . g:mplayer#option . ' '
-        \ . l:custom_option
+        \ . custom_option
         \)
   call s:read()
-  call s:enqueue(s:make_loadcmds(l:filelist))
+  call s:enqueue(s:make_loadcmds(filelist))
 endfunction
 
 function! mplayer#enqueue(...) abort
@@ -183,44 +183,44 @@ function! mplayer#stop() abort
 endfunction
 
 function! mplayer#is_playing() abort
-  let l:status = 'dead'
+  let status = 'dead'
   try
-    let l:status = s:PM.status(s:PROCESS_NAME)
+    let status = s:PM.status(s:PROCESS_NAME)
   catch
   endtry
-  return l:status ==# 'inactive' || l:status ==# 'active'
+  return status ==# 'inactive' || status ==# 'active'
 endfunction
 
 function! mplayer#next(...) abort
-  let l:n = get(a:, 1, 1)
-  echo iconv(s:command('pt_step ' . l:n), s:TENC, &enc)
+  let n = get(a:, 1, 1)
+  echo iconv(s:command('pt_step ' . n), s:TENC, &enc)
   call s:read()
 endfunction
 
 function! mplayer#prev(...) abort
-  let l:n = -get(a:, 1, 1)
-  echo iconv(s:command('pt_step ' . l:n), s:TENC, &enc)
+  let n = -get(a:, 1, 1)
+  echo iconv(s:command('pt_step ' . n), s:TENC, &enc)
   call s:read()
 endfunction
 
 function! mplayer#command(cmd, ...) abort
   if !mplayer#is_playing() | return | endif
-  let l:is_iconv = get(a:, 1, 0)
-  let l:str = s:command(a:cmd)
-  if l:is_iconv
-    let l:str = iconv(l:str, s:TENC, &enc)
+  let is_iconv = get(a:, 1, 0)
+  let str = s:command(a:cmd)
+  if is_iconv
+    let str = iconv(str, s:TENC, &enc)
   endif
-  echo substitute(substitute(l:str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\(.*\)$', '\1', '')
+  echo substitute(substitute(str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\(.*\)$', '\1', '')
 endfunction
 
 function! mplayer#set_seek(pos) abort
-  let l:second = s:to_second(a:pos)
-  let l:lastchar = a:pos[len(a:pos) - 1]
-  if l:second != -1
-    echo s:command('seek ' . l:second . ' 2')
-  elseif l:lastchar ==# 's' || l:lastchar =~# '\d'
+  let second = s:to_second(a:pos)
+  let lastchar = a:pos[len(a:pos) - 1]
+  if second != -1
+    echo s:command('seek ' . second . ' 2')
+  elseif lastchar ==# 's' || lastchar =~# '\d'
     echo s:command('seek ' . a:pos . ' 2')
-  elseif l:lastchar ==# '%'
+  elseif lastchar ==# '%'
     echo s:command('seek ' . a:pos . ' 1')
   endif
 endfunction
@@ -244,14 +244,14 @@ endfunction
 
 function! mplayer#operate_with_key() abort
   if !mplayer#is_playing() | return | endif
-  let l:key = getchar()
-  while l:key != s:EXIT_KEYCODE
-    if type(l:key) == 0
-      call s:PM.writeln(s:PROCESS_NAME, 'key_down_event ' . l:key)
-    elseif has_key(s:KEY_ACTION_DICT, l:key)
-      call s:PM.writeln(s:PROCESS_NAME, s:KEY_ACTION_DICT[l:key])
+  let key = getchar()
+  while key != s:EXIT_KEYCODE
+    if type(key) == 0
+      call s:PM.writeln(s:PROCESS_NAME, 'key_down_event ' . key)
+    elseif has_key(s:KEY_ACTION_DICT, key)
+      call s:PM.writeln(s:PROCESS_NAME, s:KEY_ACTION_DICT[key])
     endif
-    let l:key = getchar()
+    let key = getchar()
   endwhile
   call s:PM.writeln(s:PROCESS_NAME, s:DUMMY_COMMAND)
   call s:read(s:WAIT_TIME)
@@ -260,33 +260,33 @@ endfunction
 function! mplayer#show_file_info() abort
   if !mplayer#is_playing() | return | endif
   call s:PM.writeln(s:PROCESS_NAME, s:DUMMY_COMMAND)
-  for l:cmd in s:INFO_COMMANDS
-    call s:PM.writeln(s:PROCESS_NAME, l:cmd)
+  for cmd in s:INFO_COMMANDS
+    call s:PM.writeln(s:PROCESS_NAME, cmd)
   endfor
-  let l:text = substitute(iconv(s:read(), s:TENC, &enc), "'", '', 'g')
-  let l:answers = map(split(l:text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.\\+=\\(.*\\)$", "\\1", "")')
-  if len(l:answers) == 0 | return | endif
+  let text = substitute(iconv(s:read(), s:TENC, &enc), "'", '', 'g')
+  let answers = map(split(text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.\\+=\\(.*\\)$", "\\1", "")')
+  if len(answers) == 0 | return | endif
   echo '[STANDARD INFORMATION]'
   try
-    echo '  posiotion: ' s:to_timestr(l:answers[0]) '/' s:to_timestr(l:answers[1]) ' (' . l:answers[2] . '%)'
-    echo '  filename:  ' l:answers[3]
+    echo '  posiotion: ' s:to_timestr(answers[0]) '/' s:to_timestr(answers[1]) ' (' . answers[2] . '%)'
+    echo '  filename:  ' answers[3]
     echo '[META DATA]'
-    echo '  title:     ' l:answers[4]
-    echo '  artist:    ' l:answers[5]
-    echo '  album:     ' l:answers[6]
-    echo '  year:      ' l:answers[7]
-    echo '  comment:   ' l:answers[8]
-    echo '  track:     ' l:answers[9]
-    echo '  genre:     ' l:answers[10]
+    echo '  title:     ' answers[4]
+    echo '  artist:    ' answers[5]
+    echo '  album:     ' answers[6]
+    echo '  year:      ' answers[7]
+    echo '  comment:   ' answers[8]
+    echo '  track:     ' answers[9]
+    echo '  genre:     ' answers[10]
     echo '[AUDIO]'
-    echo '  codec:     ' l:answers[11]
-    echo '  bitrate:   ' l:answers[12]
-    echo '  sample:    ' l:answers[13]
-    if l:answers[14] !=# '' && l:answers[15] !=# '' && l:answers[16] !=# ''
+    echo '  codec:     ' answers[11]
+    echo '  bitrate:   ' answers[12]
+    echo '  sample:    ' answers[13]
+    if answers[14] !=# '' && answers[15] !=# '' && answers[16] !=# ''
       echo '[VIDEO]'
-      echo '  codec:     ' l:answers[14]
-      echo '  bitrate:   ' l:answers[15]
-      echo '  resolution:' l:answers[16]
+      echo '  codec:     ' answers[14]
+      echo '  bitrate:   ' answers[15]
+      echo '  resolution:' answers[16]
     endif
   catch /^Vim\%((\a\+)\)\=:E684: /
     echon ' '
@@ -297,9 +297,9 @@ function! mplayer#show_file_info() abort
 endfunction
 
 function! mplayer#help(...) abort
-  let l:arg = get(a:, 1, 'cmdlist')
-  if has_key(s:HELP_DICT, l:arg)
-    echo s:P.system(g:mplayer#mplayer . ' ' . s:HELP_DICT[l:arg])
+  let arg = get(a:, 1, 'cmdlist')
+  if has_key(s:HELP_DICT, arg)
+    echo s:P.system(g:mplayer#mplayer . ' ' . s:HELP_DICT[arg])
   endif
 endfunction
 
@@ -323,33 +323,33 @@ endfunction
 
 function! mplayer#flush() abort
   if !mplayer#is_playing() | return | endif
-  let l:r = s:PM.read(s:PROCESS_NAME, [])
-  if l:r[0] != ''
+  let r = s:PM.read(s:PROCESS_NAME, [])
+  if r[0] != ''
     echo '[stdout]'
-    echo l:r[0]
+    echo r[0]
   endif
-  if l:r[1] != ''
+  if r[1] != ''
     echo '[stderr]'
-    echo l:r[1]
+    echo r[1]
   endif
 endfunction
 
 function! mplayer#cmd_complete(arglead, cmdline, cursorpos) abort
   if !exists('s:cmd_complete_cache')
-    let l:cmdlist = s:P.system(g:mplayer#mplayer . ' -input cmdlist')
-    let s:cmd_complete_cache = sort(map(split(l:cmdlist, "\n"), 'split(v:val, " \\+")[0]'))
+    let cmdlist = s:P.system(g:mplayer#mplayer . ' -input cmdlist')
+    let s:cmd_complete_cache = sort(map(split(cmdlist, "\n"), 'split(v:val, " \\+")[0]'))
   endif
-  let l:args = split(split(a:cmdline, '\s*\\\@<!|\s*')[-1], '\s\+')
-  let l:nargs = len(l:args)
-  let l:candidates = []
-  if has_key(s:SUB_ARG_DICT, l:args[-1])
-    let l:candidates = s:SUB_ARG_DICT[l:args[-1]]
-  elseif l:nargs == 3 && a:arglead !=# '' && has_key(s:SUB_ARG_DICT, l:args[-2])
-    let l:candidates = s:SUB_ARG_DICT[l:args[-2]]
-  elseif l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
-    let l:candidates = s:cmd_complete_cache
+  let args = split(split(a:cmdline, '\s*\\\@<!|\s*')[-1], '\s\+')
+  let nargs = len(args)
+  let candidates = []
+  if has_key(s:SUB_ARG_DICT, args[-1])
+    let candidates = s:SUB_ARG_DICT[args[-1]]
+  elseif nargs == 3 && a:arglead !=# '' && has_key(s:SUB_ARG_DICT, args[-2])
+    let candidates = s:SUB_ARG_DICT[args[-2]]
+  elseif nargs == 1 || (nargs == 2 && a:arglead !=# '')
+    let candidates = s:cmd_complete_cache
   endif
-  return s:match_filter(copy(l:candidates), a:arglead)
+  return s:match_filter(copy(candidates), a:arglead)
 endfunction
 
 function! mplayer#step_property_complete(arglead, cmdline, cursorpos) abort
@@ -374,8 +374,8 @@ endfunction
 
 
 function! s:enqueue(loadcmds) abort
-  for l:cmd in a:loadcmds
-    call s:writeln(l:cmd)
+  for cmd in a:loadcmds
+    call s:writeln(cmd)
   endfor
   call s:read(s:WAIT_TIME)
 endfunction
@@ -392,30 +392,30 @@ function! s:writeln(cmd) abort
 endfunction
 
 function! s:read(...) abort
-  let l:wait_time = get(a:, 1, 0.05)
-  let l:pattern = get(a:, 2, [])
-  let l:raw_text = s:PM.read_wait(s:PROCESS_NAME, l:wait_time, [])[0]
-  return substitute(l:raw_text, s:DUMMY_PATTERN, '', 'g')
+  let wait_time = get(a:, 1, 0.05)
+  let pattern = get(a:, 2, [])
+  let raw_text = s:PM.read_wait(s:PROCESS_NAME, wait_time, [])[0]
+  return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
 endfunction
 
 function! s:make_loadcmds(args) abort
-  let l:filelist = []
-  for l:arg in a:args
-    for l:item in split(expand(l:arg), "\n")
-      if isdirectory(l:item)
-        let l:dir_items = split(globpath(l:item, '*'), "\n")
-        let l:filelist += map(filter(l:dir_items, 'filereadable(v:val)'), 's:process_file(v:val)')
-      elseif l:item =~# '^\(cdda\|cddb\|dvd\|file\|ftp\|gopher\|tv\|vcd\|http\|https\)://'
-        call add(l:filelist, 'loadfile ' . l:item . ' 1')
+  let filelist = []
+  for arg in a:args
+    for item in split(expand(arg), "\n")
+      if isdirectory(item)
+        let dir_items = split(globpath(item, '*'), "\n")
+        let filelist += map(filter(dir_items, 'filereadable(v:val)'), 's:process_file(v:val)')
+      elseif item =~# '^\(cdda\|cddb\|dvd\|file\|ftp\|gopher\|tv\|vcd\|http\|https\)://'
+        call add(filelist, 'loadfile ' . item . ' 1')
       else
-        call add(l:filelist, s:process_file(expand(l:item)))
+        call add(filelist, s:process_file(expand(item)))
       endif
     endfor
   endfor
   if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
-    return map(l:filelist, 'substitute(v:val, "/cygdrive/\\(\\a\\)", "\\1:", "")')
+    return map(filelist, 'substitute(v:val, "/cygdrive/\\(\\a\\)", "\\1:", "")')
   else
-    return l:filelist
+    return filelist
   endif
 endfunction
 
@@ -424,13 +424,13 @@ function! s:process_file(file) abort
 endfunction
 
 function! s:to_timestr(secstr) abort
-  let l:second = str2nr(a:secstr)
-  let l:dec_part = str2float(a:secstr) - l:second
-  let l:hour = l:second / 3600
-  let l:second = l:second % 3600
-  let l:minute = l:second / 60
-  let l:second = l:second % 60
-  return printf('%02d:%02d:%02d.%1d', l:hour, l:minute, l:second, float2nr(l:dec_part * 10))
+  let second = str2nr(a:secstr)
+  let dec_part = str2float(a:secstr) - second
+  let hour = second / 3600
+  let second = second % 3600
+  let minute = second / 60
+  let second = second % 60
+  return printf('%02d:%02d:%02d.%1d', hour, minute, second, float2nr(dec_part * 10))
 endfunction
 
 function! s:to_second(timestr) abort
@@ -455,16 +455,16 @@ function! s:show_timeinfo() abort
   call s:PM.writeln(s:PROCESS_NAME, 'get_time_pos')
   call s:PM.writeln(s:PROCESS_NAME, 'get_time_length')
   call s:PM.writeln(s:PROCESS_NAME, 'get_percent_pos')
-  let l:text = substitute(s:read(), "'", '', 'g')
-  let l:answers = map(split(l:text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.\\+=\\(.*\\)$", "\\1", "")')
-  if len(l:answers) == 3
-    echo '[MPlayer] position:' s:to_timestr(l:answers[0]) '/' s:to_timestr(l:answers[1]) ' (' . l:answers[2] . '%)'
+  let text = substitute(s:read(), "'", '', 'g')
+  let answers = map(split(text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.\\+=\\(.*\\)$", "\\1", "")')
+  if len(answers) == 3
+    echo '[MPlayer] position:' s:to_timestr(answers[0]) '/' s:to_timestr(answers[1]) ' (' . answers[2] . '%)'
   endif
 endfunction
 
 function! s:first_arg_complete(candidates, arglead, cmdline) abort
-  let l:nargs = len(split(split(a:cmdline, '\s*\\\@<!|\s*')[-1], '\s\+'))
-  if l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
+  let nargs = len(split(split(a:cmdline, '\s*\\\@<!|\s*')[-1], '\s\+'))
+  if nargs == 1 || (nargs == 2 && a:arglead !=# '')
     return s:match_filter(a:candidates, a:arglead)
   endif
 endfunction
