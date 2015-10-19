@@ -143,7 +143,7 @@ let s:HELP_DICT = {
 lockvar s:HELP_DICT
 
 
-function! mplayer#play(...)
+function! mplayer#play(...) abort
   if !executable(g:mplayer#mplayer)
     echoerr 'Error: Please install mplayer.'
     return
@@ -168,7 +168,7 @@ function! mplayer#play(...)
   call s:enqueue(s:make_loadcmds(l:filelist))
 endfunction
 
-function! mplayer#enqueue(...)
+function! mplayer#enqueue(...) abort
   if !mplayer#is_playing()
     call s:PM.touch(s:PROCESS_NAME, g:mplayer#mplayer . ' ' . g:mplayer#option)
     call s:read()
@@ -176,13 +176,13 @@ function! mplayer#enqueue(...)
   call s:enqueue(s:make_loadcmds(a:000))
 endfunction
 
-function! mplayer#stop()
+function! mplayer#stop() abort
   if !mplayer#is_playing() | return | endif
   call s:stop_rt_info()
   call s:PM.kill(s:PROCESS_NAME)
 endfunction
 
-function! mplayer#is_playing()
+function! mplayer#is_playing() abort
   let l:status = 'dead'
   try
     let l:status = s:PM.status(s:PROCESS_NAME)
@@ -191,19 +191,19 @@ function! mplayer#is_playing()
   return l:status ==# 'inactive' || l:status ==# 'active'
 endfunction
 
-function! mplayer#next(...)
+function! mplayer#next(...) abort
   let l:n = get(a:, 1, 1)
   echo iconv(s:command('pt_step ' . l:n), s:TENC, &enc)
   call s:read()
 endfunction
 
-function! mplayer#prev(...)
+function! mplayer#prev(...) abort
   let l:n = -get(a:, 1, 1)
   echo iconv(s:command('pt_step ' . l:n), s:TENC, &enc)
   call s:read()
 endfunction
 
-function! mplayer#command(cmd, ...)
+function! mplayer#command(cmd, ...) abort
   if !mplayer#is_playing() | return | endif
   let l:is_iconv = get(a:, 1, 0)
   let l:str = s:command(a:cmd)
@@ -213,7 +213,7 @@ function! mplayer#command(cmd, ...)
   echo substitute(substitute(l:str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\(.*\)$', '\1', '')
 endfunction
 
-function! mplayer#set_seek(pos)
+function! mplayer#set_seek(pos) abort
   let l:second = s:to_second(a:pos)
   let l:lastchar = a:pos[len(a:pos) - 1]
   if l:second != -1
@@ -225,7 +225,7 @@ function! mplayer#set_seek(pos)
   endif
 endfunction
 
-function! mplayer#set_speed(speed, is_scaletempo)
+function! mplayer#set_speed(speed, is_scaletempo) abort
   if a:is_scaletempo
     echo s:command('af_add scaletempo')
   else
@@ -234,7 +234,7 @@ function! mplayer#set_speed(speed, is_scaletempo)
   echo s:command('speed_set ' . a:speed)
 endfunction
 
-function! mplayer#set_equalizer(band_str)
+function! mplayer#set_equalizer(band_str) abort
   if has_key(s:eq_presets, a:band_str)
     call s:command('af_eq_set_bands ' . s:eq_presets[a:band_str])
   else
@@ -242,7 +242,7 @@ function! mplayer#set_equalizer(band_str)
   endif
 endfunction
 
-function! mplayer#operate_with_key()
+function! mplayer#operate_with_key() abort
   if !mplayer#is_playing() | return | endif
   let l:key = getchar()
   while l:key != s:EXIT_KEYCODE
@@ -257,7 +257,7 @@ function! mplayer#operate_with_key()
   call s:read(s:WAIT_TIME)
 endfunction
 
-function! mplayer#show_file_info()
+function! mplayer#show_file_info() abort
   if !mplayer#is_playing() | return | endif
   call s:PM.writeln(s:PROCESS_NAME, s:DUMMY_COMMAND)
   for l:cmd in s:INFO_COMMANDS
@@ -296,14 +296,14 @@ function! mplayer#show_file_info()
   endtry
 endfunction
 
-function! mplayer#help(...)
+function! mplayer#help(...) abort
   let l:arg = get(a:, 1, 'cmdlist')
   if has_key(s:HELP_DICT, l:arg)
     echo s:P.system(g:mplayer#mplayer . ' ' . s:HELP_DICT[l:arg])
   endif
 endfunction
 
-function! mplayer#toggle_rt_timeinfo()
+function! mplayer#toggle_rt_timeinfo() abort
   if s:rt_sw
     call s:stop_rt_info()
   else
@@ -312,16 +312,16 @@ function! mplayer#toggle_rt_timeinfo()
   let s:rt_sw = !s:rt_sw
 endfunction
 
-function! s:start_rt_info()
+function! s:start_rt_info() abort
   if !mplayer#is_playing() | return | endif
   autocmd! MPlayer CursorHold,CursorHoldI * call s:update()
 endfunction
 
-function! s:stop_rt_info()
+function! s:stop_rt_info() abort
   autocmd! MPlayer CursorHold,CursorHoldI
 endfunction
 
-function! mplayer#flush()
+function! mplayer#flush() abort
   if !mplayer#is_playing() | return | endif
   let l:r = s:PM.read(s:PROCESS_NAME, [])
   if l:r[0] != ''
@@ -334,7 +334,7 @@ function! mplayer#flush()
   endif
 endfunction
 
-function! mplayer#cmd_complete(arglead, cmdline, cursorpos)
+function! mplayer#cmd_complete(arglead, cmdline, cursorpos) abort
   if !exists('s:cmd_complete_cache')
     let l:cmdlist = s:P.system(g:mplayer#mplayer . ' -input cmdlist')
     let s:cmd_complete_cache = sort(map(split(l:cmdlist, "\n"), 'split(v:val, " \\+")[0]'))
@@ -352,53 +352,53 @@ function! mplayer#cmd_complete(arglead, cmdline, cursorpos)
   return s:match_filter(copy(l:candidates), a:arglead)
 endfunction
 
-function! mplayer#step_property_complete(arglead, cmdline, cursorpos)
+function! mplayer#step_property_complete(arglead, cmdline, cursorpos) abort
   return s:first_arg_complete(copy(s:SUB_ARG_DICT.step_property), a:arglead, a:cmdline)
 endfunction
 
-function! mplayer#get_property_complete(arglead, cmdline, cursorpos)
+function! mplayer#get_property_complete(arglead, cmdline, cursorpos) abort
   return s:first_arg_complete(copy(s:SUB_ARG_DICT.get_property), a:arglead, a:cmdline)
 endfunction
 
-function! mplayer#set_property_complete(arglead, cmdline, cursorpos)
+function! mplayer#set_property_complete(arglead, cmdline, cursorpos) abort
   return s:first_arg_complete(copy(s:SUB_ARG_DICT.set_property), a:arglead, a:cmdline)
 endfunction
 
-function! mplayer#equlizer_complete(arglead, cmdline, cursorpos)
+function! mplayer#equlizer_complete(arglead, cmdline, cursorpos) abort
   return s:first_arg_complete(sort(keys(s:eq_presets)), a:arglead, a:cmdline)
 endfunction
 
-function! mplayer#help_complete(arglead, cmdline, cursorpos)
+function! mplayer#help_complete(arglead, cmdline, cursorpos) abort
   return s:first_arg_complete(sort(keys(s:HELP_DICT)), a:arglead, a:cmdline)
 endfunction
 
 
-function! s:enqueue(loadcmds)
+function! s:enqueue(loadcmds) abort
   for l:cmd in a:loadcmds
     call s:writeln(l:cmd)
   endfor
   call s:read(s:WAIT_TIME)
 endfunction
 
-function! s:command(cmd)
+function! s:command(cmd) abort
   if !mplayer#is_playing() | return | endif
   call s:writeln(a:cmd)
   return s:read()
 endfunction
 
-function! s:writeln(cmd)
+function! s:writeln(cmd) abort
   call s:PM.writeln(s:PROCESS_NAME, s:DUMMY_COMMAND)
   call s:PM.writeln(s:PROCESS_NAME, a:cmd)
 endfunction
 
-function! s:read(...)
+function! s:read(...) abort
   let l:wait_time = get(a:, 1, 0.05)
   let l:pattern = get(a:, 2, [])
   let l:raw_text = s:PM.read_wait(s:PROCESS_NAME, l:wait_time, [])[0]
   return substitute(l:raw_text, s:DUMMY_PATTERN, '', 'g')
 endfunction
 
-function! s:make_loadcmds(args)
+function! s:make_loadcmds(args) abort
   let l:filelist = []
   for l:arg in a:args
     for l:item in split(expand(l:arg), "\n")
@@ -419,11 +419,11 @@ function! s:make_loadcmds(args)
   endif
 endfunction
 
-function! s:process_file(file)
+function! s:process_file(file) abort
   return (a:file =~# '\.\(m3u\|m3u8\|pls\|wax\|wpl\|xspf\)$' ? 'loadlist ' : 'loadfile ') . a:file . ' 1'
 endfunction
 
-function! s:to_timestr(secstr)
+function! s:to_timestr(secstr) abort
   let l:second = str2nr(a:secstr)
   let l:dec_part = str2float(a:secstr) - l:second
   let l:hour = l:second / 3600
@@ -433,7 +433,7 @@ function! s:to_timestr(secstr)
   return printf('%02d:%02d:%02d.%1d', l:hour, l:minute, l:second, float2nr(l:dec_part * 10))
 endfunction
 
-function! s:to_second(timestr)
+function! s:to_second(timestr) abort
   if a:timestr =~# '^\d\+:\d\+:\d\+\(\.\d\+\)\?$'
     let parts = split(a:timestr, ':')
     return str2nr(parts[0]) * 3600 + str2nr(parts[1]) * 60 + str2nr(parts[2])
@@ -445,12 +445,12 @@ function! s:to_second(timestr)
   endif
 endfunction
 
-function! s:update()
+function! s:update() abort
   call s:show_timeinfo()
   call feedkeys(mode() ==# 'i' ? "\<C-g>\<ESC>" : "g\<ESC>", 'n')
 endfunction
 
-function! s:show_timeinfo()
+function! s:show_timeinfo() abort
   call s:PM.writeln(s:PROCESS_NAME, s:DUMMY_COMMAND)
   call s:PM.writeln(s:PROCESS_NAME, 'get_time_pos')
   call s:PM.writeln(s:PROCESS_NAME, 'get_time_length')
@@ -462,14 +462,14 @@ function! s:show_timeinfo()
   endif
 endfunction
 
-function! s:first_arg_complete(candidates, arglead, cmdline)
+function! s:first_arg_complete(candidates, arglead, cmdline) abort
   let l:nargs = len(split(split(a:cmdline, '\s*\\\@<!|\s*')[-1], '\s\+'))
   if l:nargs == 1 || (l:nargs == 2 && a:arglead !=# '')
     return s:match_filter(a:candidates, a:arglead)
   endif
 endfunction
 
-function! s:match_filter(candidates, arglead)
+function! s:match_filter(candidates, arglead) abort
   return filter(a:candidates, 'stridx(tolower(v:val), tolower(a:arglead)) == 0')
 endfunction
 
