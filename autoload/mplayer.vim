@@ -21,6 +21,7 @@ else
   let g:mplayer#option = get(g:, 'mplayer#option',
         \ '-idle -quiet -slave -af equalizer=0:0:0:0:0:0:0:0:0:0')
 endif
+let g:mplayer#suffixes = get(g:, 'mplayer#suffixes', ['*'])
 
 
 let s:V = vital#of('mplayer')
@@ -268,7 +269,7 @@ function! mplayer#show_file_info() abort
   if len(answers) == 0 | return | endif
   echo '[STANDARD INFORMATION]'
   try
-    echo '  posiotion: ' s:to_timestr(answers[0]) '/' s:to_timestr(answers[1]) ' (' . answers[2] . '%)'
+    echo '  posiotion: ' s:to_timestr(answers[1]) '/' s:to_timestr(answers[0]) ' (' . answers[2] . '%)'
     echo '  filename:  ' answers[3]
     echo '[META DATA]'
     echo '  title:     ' answers[4]
@@ -401,14 +402,14 @@ endfunction
 function! s:make_loadcmds(args) abort
   let loadcmds = []
   for arg in a:args
-    for item in split(expand(arg), "\n")
+    for item in split(expand(arg, 1), "\n")
       if isdirectory(item)
-        let dir_items = split(globpath(item, '*'), "\n")
+        let dir_items = split(globpath(item, '*', 1), "\n")
         let loadcmds += map(filter(dir_items, 'filereadable(v:val)'), 's:process_file(v:val)')
       elseif item =~# '^\(cdda\|cddb\|dvd\|file\|ftp\|gopher\|tv\|vcd\|http\|https\)://'
         call add(loadcmds, 'loadfile ' . item . ' 1')
       else
-        call add(loadcmds, s:process_file(expand(item)))
+        call add(loadcmds, s:process_file(expand(item, 1)))
       endif
     endfor
   endfor
@@ -458,7 +459,7 @@ function! s:show_timeinfo() abort
   let text = substitute(s:read(), "'", '', 'g')
   let answers = map(split(text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.\\+=\\(.*\\)$", "\\1", "")')
   if len(answers) == 3
-    echo '[MPlayer] position:' s:to_timestr(answers[0]) '/' s:to_timestr(answers[1]) ' (' . answers[2] . '%)'
+    echo '[MPlayer] position:' s:to_timestr(answers[1]) '/' s:to_timestr(answers[0]) ' (' . answers[2] . '%)'
   endif
 endfunction
 
