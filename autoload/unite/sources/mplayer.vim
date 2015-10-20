@@ -25,9 +25,7 @@ let s:source = {
       \}
 
 function! s:source.action_table.action.func(candidates) abort
-  for candidate in a:candidates
-    call mplayer#enqueue(candidate.word)
-  endfor
+  call mplayer#enqueue(map(copy(a:candidates), 'v:val.word'))
 endfunction
 
 function! s:source.gather_candidates(args, context) abort

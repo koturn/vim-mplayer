@@ -174,7 +174,7 @@ function! mplayer#enqueue(...) abort
     call s:PM.touch(s:PROCESS_NAME, g:mplayer#mplayer . ' ' . g:mplayer#option)
     call s:read()
   endif
-  call s:enqueue(s:make_loadcmds(a:000))
+  call s:enqueue(s:make_loadcmds(type(a:000) == type([]) ? a:1 : a:000))
 endfunction
 
 function! mplayer#stop() abort
