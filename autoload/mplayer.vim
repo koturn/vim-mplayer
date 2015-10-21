@@ -25,6 +25,7 @@ let g:mplayer#suffixes = get(g:, 'mplayer#suffixes', ['*'])
 
 
 let s:V = vital#of('mplayer')
+let s:List = s:V.import('Data.List')
 let s:P = s:V.import('Process')
 let s:PM = s:V.import('ProcessManager')
 
@@ -174,7 +175,7 @@ function! mplayer#enqueue(...) abort
     call s:PM.touch(s:PROCESS_NAME, g:mplayer#mplayer . ' ' . g:mplayer#option)
     call s:read()
   endif
-  call s:enqueue(s:make_loadcmds(type(a:000) == type([]) ? a:1 : a:000))
+  call s:enqueue(s:make_loadcmds(s:List.flatten(a:000)))
 endfunction
 
 function! mplayer#stop() abort
