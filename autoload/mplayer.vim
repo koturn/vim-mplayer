@@ -157,7 +157,7 @@ function! mplayer#play(...) abort
   call mplayer#stop()
   let pos = match(a:000, '^--$')
   if pos == -1
-    let pos = len(pos)
+    let pos = len(a:000)
   endif
   let filelist = a:000[: pos - 1]
   let custom_option = join(a:000[pos + 1 :], ' ')
