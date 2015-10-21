@@ -340,7 +340,7 @@ function! mplayer#cmd_complete(arglead, cmdline, cursorpos) abort
     let cmdlist = s:P.system(g:mplayer#mplayer . ' -input cmdlist')
     let s:cmd_complete_cache = sort(map(split(cmdlist, "\n"), 'split(v:val, " \\+")[0]'))
   endif
-  let args = split(split(a:cmdline, '\s*\\\@<!|\s*')[-1], '\s\+')
+  let args = split(split(a:cmdline, '[^\\]\zs|')[-1], '\s\+')
   let nargs = len(args)
   let candidates = []
   if has_key(s:SUB_ARG_DICT, args[-1])
@@ -405,7 +405,7 @@ function! s:make_loadcmds(args) abort
     for item in split(expand(arg, 1), "\n")
       if isdirectory(item)
         let dir_items = split(globpath(item, '*', 1), "\n")
-        let loadcmds += map(filter(dir_items, 'filereadable(v:val)'), 's:process_file(v:val)')
+        call extend(loadcmds, map(filter(dir_items, 'filereadable(v:val)'), 's:process_file(v:val)'))
       elseif item =~# '^\(cdda\|cddb\|dvd\|file\|ftp\|gopher\|tv\|vcd\|http\|https\)://'
         call add(loadcmds, 'loadfile ' . item . ' 1')
       else
@@ -464,7 +464,7 @@ function! s:show_timeinfo() abort
 endfunction
 
 function! s:first_arg_complete(candidates, arglead, cmdline) abort
-  let nargs = len(split(split(a:cmdline, '\s*\\\@<!|\s*')[-1], '\s\+'))
+  let nargs = len(split(split(a:cmdline, '[^\\]\zs|')[-1], '\s\+'))
   if nargs == 1 || (nargs == 2 && a:arglead !=# '')
     return s:match_filter(a:candidates, a:arglead)
   endif
