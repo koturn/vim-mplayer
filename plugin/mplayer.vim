@@ -39,6 +39,7 @@ command! -bar -nargs=? -complete=customlist,mplayer#help_complete  MPlayerHelp c
 command! -bar -nargs=0 MPlayerFlush call mplayer#flush()
 
 command! -nargs=? -complete=dir CtrlPMPlayer  call ctrlp#mplayer#start(<f-args>)
+command! -nargs=? -complete=dir AltiMPlayer  call alti#mplayer#start(<f-args>)
 
 
 augroup MPlayer
