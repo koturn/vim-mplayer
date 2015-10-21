@@ -29,7 +29,7 @@ function! s:source.action_table.action.func(candidates) abort
 endfunction
 
 function! s:source.gather_candidates(args, context) abort
-  let dir = a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/')
+  let dir = (len(a:args) > 0 ? a:args[0] : get(g:, 'mplayer#default_dir', '~/')) . '**'
   let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
   return map(split(globpath(dir, glob_pattern, 1), "\n"), '{"word": v:val}')
 endfunction

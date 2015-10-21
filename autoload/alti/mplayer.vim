@@ -20,7 +20,7 @@ let s:define = {
 
 
 function! alti#mplayer#start(...) abort
-  let dir = a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/')
+  let s:dir = (a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/')) . '**'
   call alti#init(alti#mplayer#define())
 endfunction
 

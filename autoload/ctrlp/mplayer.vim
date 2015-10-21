@@ -34,7 +34,7 @@ let s:id = s:ctrlp_builtins + len(g:ctrlp_ext_vars)
 unlet s:ctrlp_builtins
 
 function! ctrlp#mplayer#start(...) abort
-  let dir = a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/')
+  let s:dir = (a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/')) . '**'
   call ctrlp#init(ctrlp#mplayer#id())
 endfunction
 
