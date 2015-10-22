@@ -20,7 +20,10 @@ let s:define = {
 
 
 function! alti#mplayer#start(...) abort
-  let s:dir = (a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/')) . '**'
+  let s:dir = expand(a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/'))
+  if s:dir[len(s:dir) - 1] !=# '/'
+    let s:dir .= '/'
+  endif
   call alti#init(alti#mplayer#define())
 endfunction
 
@@ -30,7 +33,8 @@ endfunction
 
 function! alti#mplayer#enter() abort dict
   let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
-  let self.candidates = split(globpath(s:dir, glob_pattern, 1), "\n")
+  let len = len(s:dir)
+  let self.candidates = map(split(globpath(s:dir . '**', glob_pattern, 1), "\n"), 'v:val[len :]')
 endfunction
 
 function! alti#mplayer#cmpl(context) abort dict
@@ -42,7 +46,7 @@ function! alti#mplayer#prompt(context) abort
 endfunction
 
 function! alti#mplayer#submitted(context, line) abort
-  call mplayer#enqueue(a:context.selection)
+  call mplayer#enqueue(s:dir . a:context.selection)
 endfunction
 
 
