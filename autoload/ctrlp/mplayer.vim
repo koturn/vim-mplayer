@@ -19,11 +19,13 @@ let s:ctrlp_builtins = ctrlp#getvar('g:ctrlp_builtins')
 let s:mplayer_var = {
       \ 'init': 'ctrlp#mplayer#init()',
       \ 'accept': 'ctrlp#mplayer#accept',
+      \ 'exit': 'ctrlp#mplayer#exit()',
       \ 'lname': 'mplayer',
       \ 'sname': 'mplayer',
       \ 'type': 'path',
       \ 'sort': 0,
-      \ 'nolim': 1
+      \ 'nolim': 1,
+      \ 'opmul': 1
       \}
 if exists('g:ctrlp_ext_vars') && !empty(g:ctrlp_ext_vars)
   call add(g:ctrlp_ext_vars, s:mplayer_var)
@@ -44,12 +46,33 @@ endfunction
 
 function! ctrlp#mplayer#init() abort
   let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
+  if g:mplayer#enable_ctrlp_multi_select
+    autocmd! MPlayer BufReadCmd
+    execute 'autocmd MPlayer BufReadCmd' glob_pattern 'call s:enqueue_hook()'
+  endif
   return split(globpath(s:dir, glob_pattern, 1), "\n")
 endfunction
 
 function! ctrlp#mplayer#accept(mode, str) abort
   call ctrlp#exit()
   call mplayer#enqueue(a:str)
+endfunction
+
+function! ctrlp#mplayer#exit() abort
+  if g:mplayer#enable_ctrlp_multi_select
+    autocmd MPlayer CursorHold,CursorHoldI,CursorMoved,CursorMovedI,InsertEnter * call s:delete_autocmds_hook()
+  endif
+endfunction
+
+
+function! s:enqueue_hook() abort
+  call mplayer#enqueue(expand('%:p'))
+  bwipeout
+endfunction
+
+function! s:delete_autocmds_hook() abort
+  autocmd! MPlayer CursorHold,CursorHoldI,CursorMoved,CursorMovedI,InsertEnter *
+  autocmd! MPlayer BufReadCmd
 endfunction
 
 

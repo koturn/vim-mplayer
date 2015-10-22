@@ -22,6 +22,7 @@ else
         \ '-idle -quiet -slave -af equalizer=0:0:0:0:0:0:0:0:0:0')
 endif
 let g:mplayer#suffixes = get(g:, 'mplayer#suffixes', ['*'])
+let g:mplayer#enable_ctrlp_multi_select = get(g:, 'mplayer#enable_ctrlp_multi_select', 1)
 
 
 let s:V = vital#of('mplayer')
