@@ -406,7 +406,8 @@ function! s:make_loadcmds(args) abort
   for arg in a:args
     for item in split(expand(arg, 1), "\n")
       if isdirectory(item)
-        let dir_items = split(globpath(item, '*', 1), "\n")
+        let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
+        let dir_items = split(globpath(item, glob_pattern, 1), "\n")
         call extend(loadcmds, map(filter(dir_items, 'filereadable(v:val)'), 's:process_file(v:val)'))
       elseif item =~# '^\(cdda\|cddb\|dvd\|file\|ftp\|gopher\|tv\|vcd\|http\|https\)://'
         call add(loadcmds, 'loadfile ' . item . ' 1')
