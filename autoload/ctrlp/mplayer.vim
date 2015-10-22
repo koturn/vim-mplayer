@@ -16,10 +16,14 @@ let g:loaded_ctrlp_mplayer = 1
 let s:ctrlp_builtins = ctrlp#getvar('g:ctrlp_builtins')
 
 
+function! s:get_sid() abort
+  return matchstr(expand('<sfile>'), '^function <SNR>\zs\d\+\ze_get_sid$')
+endfunction
+let s:sid_prefix = '<SNR>' . s:get_sid() . '_'
 let s:mplayer_var = {
-      \ 'init': 'ctrlp#mplayer#init()',
-      \ 'accept': 'ctrlp#mplayer#accept',
-      \ 'exit': 'ctrlp#mplayer#exit()',
+      \ 'init': s:sid_prefix  . 'init()',
+      \ 'accept': s:sid_prefix  . 'accept',
+      \ 'exit': s:sid_prefix  . 'exit()',
       \ 'lname': 'mplayer',
       \ 'sname': 'mplayer',
       \ 'type': 'path',
@@ -33,18 +37,17 @@ else
   let g:ctrlp_ext_vars = [s:mplayer_var]
 endif
 let s:id = s:ctrlp_builtins + len(g:ctrlp_ext_vars)
-unlet s:ctrlp_builtins
+delfunction s:get_sid
+unlet s:ctrlp_builtins s:sid_prefix
+
 
 function! ctrlp#mplayer#start(...) abort
   let s:dir = (a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/')) . '**'
-  call ctrlp#init(ctrlp#mplayer#id())
+  call ctrlp#init(s:id)
 endfunction
 
-function! ctrlp#mplayer#id() abort
-  return s:id
-endfunction
 
-function! ctrlp#mplayer#init() abort
+function! s:init() abort
   let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
   if g:mplayer#enable_ctrlp_multi_select
     autocmd! MPlayer BufReadCmd
@@ -53,12 +56,12 @@ function! ctrlp#mplayer#init() abort
   return split(globpath(s:dir, glob_pattern, 1), "\n")
 endfunction
 
-function! ctrlp#mplayer#accept(mode, str) abort
+function! s:accept(mode, str) abort
   call ctrlp#exit()
   call mplayer#enqueue(a:str)
 endfunction
 
-function! ctrlp#mplayer#exit() abort
+function! s:exit() abort
   if g:mplayer#enable_ctrlp_multi_select
     autocmd MPlayer CursorHold,CursorHoldI,CursorMoved,CursorMovedI,InsertEnter * call s:delete_autocmds_hook()
   endif
