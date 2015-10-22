@@ -25,13 +25,17 @@ let s:source = {
       \}
 
 function! s:source.action_table.action.func(candidates) abort
-  call mplayer#enqueue(map(copy(a:candidates), 'v:val.word'))
+  call mplayer#enqueue(map(copy(a:candidates), 's:dir . v:val.word'))
 endfunction
 
 function! s:source.gather_candidates(args, context) abort
-  let dir = (len(a:args) > 0 ? a:args[0] : get(g:, 'mplayer#default_dir', '~/')) . '**'
+  let s:dir = expand(len(a:args) > 0 ? a:args[0] : get(g:, 'mplayer#default_dir', '~/'))
+  if s:dir[len(s:dir) - 1] !=# '/'
+    let s:dir .= '/'
+  endif
+  let len = len(s:dir)
   let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
-  return map(split(globpath(dir, glob_pattern, 1), "\n"), '{"word": v:val}')
+  return map(split(globpath(s:dir . '**', glob_pattern, 1), "\n"), '{"word": v:val[len :]}')
 endfunction
 
 function! unite#sources#mplayer#define() abort
