@@ -42,8 +42,11 @@ unlet s:ctrlp_builtins s:sid_prefix
 
 
 function! ctrlp#mplayer#start(...) abort
-  let s:dir = (a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/')) . '**'
-  call ctrlp#init(s:id)
+  let s:dir = expand(a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/'))
+  if s:dir[len(s:dir) - 1] !=# '/'
+    let s:dir .= '/'
+  endif
+  call ctrlp#init(s:id, {'dir': s:dir})
 endfunction
 
 
@@ -53,7 +56,8 @@ function! s:init() abort
     autocmd! MPlayer BufReadCmd
     execute 'autocmd MPlayer BufReadCmd' glob_pattern 'call s:enqueue_hook()'
   endif
-  return split(globpath(s:dir, glob_pattern, 1), "\n")
+  let len = len(s:dir)
+  return map(split(globpath(s:dir . '**', glob_pattern, 1), "\n"), 'v:val[len :]')
 endfunction
 
 function! s:accept(mode, str) abort
