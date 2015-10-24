@@ -20,7 +20,7 @@ function! s:get_sid() abort
   return matchstr(expand('<sfile>'), '^function <SNR>\zs\d\+\ze_get_sid$')
 endfunction
 let s:sid_prefix = '<SNR>' . s:get_sid() . '_'
-let s:mplayer_var = {
+let g:ctrlp_ext_vars = add(get(g:, 'ctrlp_ext_vars', []), {
       \ 'init': s:sid_prefix  . 'init()',
       \ 'accept': s:sid_prefix  . 'accept',
       \ 'exit': s:sid_prefix  . 'exit()',
@@ -30,12 +30,7 @@ let s:mplayer_var = {
       \ 'sort': 0,
       \ 'nolim': 1,
       \ 'opmul': 1
-      \}
-if exists('g:ctrlp_ext_vars') && !empty(g:ctrlp_ext_vars)
-  call add(g:ctrlp_ext_vars, s:mplayer_var)
-else
-  let g:ctrlp_ext_vars = [s:mplayer_var]
-endif
+      \})
 let s:id = s:ctrlp_builtins + len(g:ctrlp_ext_vars)
 delfunction s:get_sid
 unlet s:ctrlp_builtins s:sid_prefix
