@@ -9,8 +9,6 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let g:unite#sources#mplayer#default_dir = get(g:, 'g:unite#sources#mplayer#default_dir', '~/')
-
 
 let s:source = {
       \ 'name': 'mplayer',
@@ -26,6 +24,23 @@ let s:source = {
 
 function! s:source.action_table.action.func(candidates) abort
   call mplayer#enqueue(map(copy(a:candidates), 's:dir . v:val.word'))
+endfunction
+
+function! s:source.complete(args, context, arglead, cmdline, cursorpos) abort
+  if a:arglead ==# '~'
+    return ['~/']
+  elseif a:arglead ==# ''
+    let dirs = map(filter(split(globpath('./', '*'), "\n"),
+          \ 'isdirectory(v:val)'), 'fnameescape(v:val[2 :]) . "/"')
+  else
+    let dirs = map(filter(split(expand(a:arglead . '*'), "\n"),
+          \ 'isdirectory(v:val)'), 'fnameescape(v:val) . "/"')
+  endif
+  if a:arglead[0] ==# '~'
+    let dirs = map(dirs, 'substitute(v:val, "^" . expand("~"), "~", "")')
+  endif
+  let arglead = tolower(a:arglead)
+  return filter(dirs, '!stridx(tolower(v:val), arglead)')
 endfunction
 
 function! s:source.gather_candidates(args, context) abort
