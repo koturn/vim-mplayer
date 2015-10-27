@@ -9,10 +9,6 @@
 " ============================================================================
 let s:save_cpo = &cpo
 set cpo&vim
-if exists('g:loaded_ctrlp_mplayer') && g:loaded_ctrlp_mplayer
-  finish
-endif
-let g:loaded_ctrlp_mplayer = 1
 let s:ctrlp_builtins = ctrlp#getvar('g:ctrlp_builtins')
 
 
