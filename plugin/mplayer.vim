@@ -41,6 +41,7 @@ command! -bar -nargs=0 MPlayerFlush call mplayer#flush()
 command! -nargs=? -complete=dir CtrlPMPlayer  call ctrlp#mplayer#start(<f-args>)
 command! -nargs=? -complete=dir AltiMPlayer  call alti#mplayer#start(<f-args>)
 command! -nargs=? -complete=dir MilqiMPlayer  call milqi#mplayer#start(<f-args>)
+command! -nargs=? -complete=dir FZFMPlayer  call fzf#mplayer#start(<f-args>)
 
 
 augroup MPlayer
