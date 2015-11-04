@@ -218,7 +218,7 @@ endfunction
 
 function! mplayer#set_seek(pos) abort
   let second = s:to_second(a:pos)
-  let lastchar = a:pos[len(a:pos) - 1]
+  let lastchar = a:pos[-1 :]
   if second != -1
     echo s:command('seek ' . second . ' 2')
   elseif lastchar ==# 's' || lastchar =~# '\d'

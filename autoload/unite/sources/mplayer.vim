@@ -45,7 +45,7 @@ endfunction
 
 function! s:source.gather_candidates(args, context) abort
   let s:dir = expand(len(a:args) > 0 ? a:args[0] : get(g:, 'mplayer#default_dir', '~/'))
-  if s:dir[len(s:dir) - 1] !=# '/'
+  if s:dir[-1 :] !=# '/'
     let s:dir .= '/'
   endif
   let len = len(s:dir)

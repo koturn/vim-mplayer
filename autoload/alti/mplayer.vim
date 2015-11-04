@@ -25,7 +25,7 @@ let s:define = {
 
 function! alti#mplayer#start(...) abort
   let s:dir = expand(a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/'))
-  if s:dir[len(s:dir) - 1] !=# '/'
+  if s:dir[-1 :] !=# '/'
     let s:dir .= '/'
   endif
   let s:define.static_head = s:dir

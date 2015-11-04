@@ -22,7 +22,7 @@ endfunction
 
 function! fzf#mplayer#start(...) abort
   let dir = expand(a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/'))
-  if dir[len(dir) - 1] !=# '/'
+  if dir[-1 :] !=# '/'
     let dir .= '/'
   endif
   let s:option.source = s:gather_candidates(dir)
