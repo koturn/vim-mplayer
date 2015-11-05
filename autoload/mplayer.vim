@@ -409,7 +409,7 @@ function! s:make_loadcmds(args) abort
         let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
         let dir_items = split(globpath(item, glob_pattern, 1), "\n")
         call extend(loadcmds, map(filter(dir_items, 'filereadable(v:val)'), 's:process_file(v:val)'))
-      elseif item =~# '^\(cdda\|cddb\|dvd\|file\|ftp\|gopher\|tv\|vcd\|http\|https\)://'
+      elseif item =~# '^\%(cdda\|cddb\|dvd\|file\|ftp\|gopher\|tv\|vcd\|http\|https\)://'
         call add(loadcmds, 'loadfile ' . item . ' 1')
       else
         call add(loadcmds, s:process_file(expand(item, 1)))
@@ -424,7 +424,7 @@ function! s:make_loadcmds(args) abort
 endfunction
 
 function! s:process_file(file) abort
-  return (a:file =~# '\.\(m3u\|m3u8\|pls\|wax\|wpl\|xspf\)$' ? 'loadlist ' : 'loadfile ') . string(a:file) . ' 1'
+  return (a:file =~# '\.\%(m3u\|m3u8\|pls\|wax\|wpl\|xspf\)$' ? 'loadlist ' : 'loadfile ') . string(a:file) . ' 1'
 endfunction
 
 function! s:to_timestr(secstr) abort
@@ -438,10 +438,10 @@ function! s:to_timestr(secstr) abort
 endfunction
 
 function! s:to_second(timestr) abort
-  if a:timestr =~# '^\d\+:\d\+:\d\+\(\.\d\+\)\?$'
+  if a:timestr =~# '^\d\+:\d\+:\d\+\%(\.\d\+\)\?$'
     let parts = split(a:timestr, ':')
     return str2nr(parts[0]) * 3600 + str2nr(parts[1]) * 60 + str2nr(parts[2])
-  elseif a:timestr =~# '^\d\+:\d\+\(\.\d\+\)\?$'
+  elseif a:timestr =~# '^\d\+:\d\+\%(\.\d\+\)\?$'
     let parts = split(a:timestr, ':')
     return str2nr(parts[0]) * 60 + str2nr(parts[1])
   else
