@@ -213,7 +213,7 @@ function! mplayer#command(cmd, ...) abort
   if is_iconv
     let str = iconv(str, s:TENC, &enc)
   endif
-  echo substitute(substitute(str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\(.*\)$', '\1', '')
+  echo matchstr(substitute(str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\zs.*$')
 endfunction
 
 function! mplayer#set_seek(pos) abort
@@ -267,7 +267,7 @@ function! mplayer#show_file_info() abort
     call s:PM.writeln(s:PROCESS_NAME, cmd)
   endfor
   let text = substitute(iconv(s:read(), s:TENC, &enc), "'", '', 'g')
-  let answers = map(split(text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.\\+=\\(.*\\)$", "\\1", "")')
+  let answers = map(split(text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
   if len(answers) == 0 | return | endif
   echo '[STANDARD INFORMATION]'
   try
@@ -460,7 +460,7 @@ function! s:show_timeinfo() abort
   call s:PM.writeln(s:PROCESS_NAME, 'get_time_length')
   call s:PM.writeln(s:PROCESS_NAME, 'get_percent_pos')
   let text = substitute(s:read(), "'", '', 'g')
-  let answers = map(split(text, s:LINE_BREAK), 'substitute(v:val, "^ANS_.\\+=\\(.*\\)$", "\\1", "")')
+  let answers = map(split(text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
   if len(answers) == 3
     echo '[MPlayer] position:' s:to_timestr(answers[1]) '/' s:to_timestr(answers[0]) ' (' . answers[2] . '%)'
   endif
