@@ -474,7 +474,8 @@ function! s:first_arg_complete(candidates, arglead, cmdline) abort
 endfunction
 
 function! s:match_filter(candidates, arglead) abort
-  return filter(a:candidates, 'stridx(tolower(v:val), tolower(a:arglead)) == 0')
+  let arglead = tolower(a:arglead)
+  return filter(a:candidates, '!stridx(tolower(v:val), arglead)')
 endfunction
 
 
