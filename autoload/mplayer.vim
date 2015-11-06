@@ -327,11 +327,11 @@ endfunction
 function! mplayer#flush() abort
   if !mplayer#is_playing() | return | endif
   let r = s:PM.read(s:PROCESS_NAME, [])
-  if r[0] != ''
+  if r[0] !=# ''
     echo '[stdout]'
     echo r[0]
   endif
-  if r[1] != ''
+  if r[1] !=# ''
     echo '[stderr]'
     echo r[1]
   endif
