@@ -11,13 +11,15 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
-let s:option = {
-        \ 'options': '-m',
-        \ 'down': 20
-        \}
-function! s:option.sink(candidate) abort
-  call mplayer#enqueue(a:candidate)
+function! s:sink(candidates) abort
+  call mplayer#enqueue(a:candidates)
 endfunction
+
+let s:option = {
+        \ 'sink*': function('s:sink'),
+        \ 'down': 20,
+        \ 'options': '-m'
+        \}
 
 
 function! fzf#mplayer#start(...) abort
