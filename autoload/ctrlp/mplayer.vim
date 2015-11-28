@@ -1,20 +1,19 @@
 " ============================================================================
 " FILE: mplayer.vim
 " AUTHOR: koturn <jeak.koutan.apple@gmail.com>
-" Last Modified: 2015 10/20
 " DESCRIPTION: {{{
 " descriptions.
 " ctrlp.vim: https://github.com/ctrlpvim/ctrlp.vim
 " }}}
 " ============================================================================
-let s:save_cpo = &cpo
-set cpo&vim
 if exists('g:loaded_ctrlp_mplayer') && g:loaded_ctrlp_mplayer
   finish
 endif
 let g:loaded_ctrlp_mplayer = 1
-let s:ctrlp_builtins = ctrlp#getvar('g:ctrlp_builtins')
+let s:save_cpo = &cpo
+set cpo&vim
 
+let s:ctrlp_builtins = ctrlp#getvar('g:ctrlp_builtins')
 
 function! s:get_sid() abort
   return matchstr(expand('<sfile>'), '^function <SNR>\zs\d\+\ze_get_sid$')
