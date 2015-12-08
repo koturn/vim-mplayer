@@ -13,18 +13,7 @@ set cpo&vim
 let s:source = {
       \ 'name': 'mplayer',
       \ 'description': 'Music player',
-      \ 'action_table': {
-      \   'action': {
-      \     'description': 'Play music',
-      \     'is_selectable': 1
-      \   }
-      \ },
-      \ 'default_action': 'action'
       \}
-
-function! s:source.action_table.action.func(candidates) abort
-  call mplayer#enqueue(map(copy(a:candidates), 's:dir . v:val.word'))
-endfunction
 
 function! s:source.complete(args, context, arglead, cmdline, cursorpos) abort
   if a:arglead ==# '~'
@@ -50,8 +39,13 @@ function! s:source.gather_candidates(args, context) abort
   endif
   let len = len(s:dir)
   let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
-  return map(split(globpath(s:dir . '**', glob_pattern, 1), "\n"), '{"word": v:val[len :]}')
+  return map(split(globpath(s:dir . '**', glob_pattern, 1), "\n"), '{
+        \ "kind": "mplayer",
+        \ "action__path": v:val,
+        \ "word": v:val[len :],
+        \}')
 endfunction
+
 
 function! unite#sources#mplayer#define() abort
   return s:source
