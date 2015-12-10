@@ -16,7 +16,7 @@ endfunction
 let s:sid_prefix = '<SNR>' . s:get_sid() . '_'
 delfunction s:get_sid
 let s:define = {
-      \ 'name': s:sid_prefix . 'mplayer',
+      \ 'name': 'mplayer',
       \ 'enter': s:sid_prefix . 'enter',
       \ 'cmpl': s:sid_prefix . 'cmpl',
       \ 'prompt': s:sid_prefix . 'prompt',
@@ -48,7 +48,8 @@ function! s:prompt(context) abort
 endfunction
 
 function! s:submitted(context, line) abort
-  call mplayer#enqueue(s:dir . a:context.selection)
+  call mplayer#enqueue(len(a:context.inputs) == 0 ?
+        \ (s:dir . a:context.selection) : map(a:context.inputs, 's:dir . v:val'))
 endfunction
 
 
