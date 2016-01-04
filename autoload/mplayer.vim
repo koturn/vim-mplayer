@@ -16,10 +16,10 @@ endif
 let g:mplayer#mplayer = get(g:, 'mplayer#mplayer', 'mplayer')
 if has('win32') || has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
   let g:mplayer#option = get(g:, 'mplayer#option',
-        \ '-idle -quiet -slave -af equalizer=0:0:0:0:0:0:0:0:0:0 -vo direct3d')
+        \ '-nofontconfig -idle -quiet -slave -af equalizer=0:0:0:0:0:0:0:0:0:0 -vo direct3d')
 else
   let g:mplayer#option = get(g:, 'mplayer#option',
-        \ '-idle -quiet -slave -af equalizer=0:0:0:0:0:0:0:0:0:0')
+        \ '-nofontconfig -idle -quiet -slave -af equalizer=0:0:0:0:0:0:0:0:0:0')
 endif
 let g:mplayer#suffixes = get(g:, 'mplayer#suffixes', ['*'])
 let g:mplayer#enable_ctrlp_multi_select = get(g:, 'mplayer#enable_ctrlp_multi_select', 1)
