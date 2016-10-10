@@ -11,6 +11,7 @@ set cpo&vim
 
 if has('win32unix')
   let g:mplayer#use_win_mplayer_in_cygwin = get(g:, 'mplayer#use_win_mplayer_in_cygwin', 0)
+  let g:mplayer#cygwin_mount_dir = get(g:, 'mplayer#cygwin_mount_dir', '/cygdrive')
 endif
 
 let g:mplayer#mplayer = get(g:, 'mplayer#mplayer', 'mplayer')
@@ -428,11 +429,9 @@ function! s:make_loadcmds(args) abort
       endif
     endfor
   endfor
-  if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
-    return map(loadcmds, 'substitute(v:val, "/\\(\\a\\)", "\\1:", "")')
-  else
-    return loadcmds
-  endif
+  return has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
+        \ ? map(loadcmds, 'substitute(v:val, g:mplayer#cygwin_mount_dir . "/\\(\\a\\)", "\\1:", "")')
+        \ : loadcmds
 endfunction
 
 function! s:process_file(file) abort
