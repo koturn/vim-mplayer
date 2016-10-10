@@ -112,7 +112,7 @@ if g:mplayer#_use_job
 
   function! s:MPlayer.enqueue(...) abort
     if !self.is_playing()
-      let self.handle = job_start(self.mplayer . ' ' . self.option . ' '. a:custom_option, {
+      let self.handle = job_start(self.mplayer . ' ' . self.option, {
             \ 'out_mode': 'raw'
             \})
     endif
@@ -129,7 +129,7 @@ if g:mplayer#_use_job
   endfunction
 
   function! s:MPlayer.is_playing() abort
-    return job_status(self.handle) ==# 'run'
+    return has_key(self, 'handle') && job_status(self.handle) ==# 'run'
   endfunction
 
   function! s:MPlayer._command(cmd) abort
