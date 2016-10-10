@@ -8,6 +8,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
+let s:P = vital#of('mplayer').import('Process')
 
 let s:eq_presets = {
       \ 'acoustic': '0:1:2:0:0:0:0:0:2:2',
@@ -130,9 +131,8 @@ function! mplayer#complete#help(arglead, cmdline, cursorpos) abort
   return s:first_arg_complete(sort(keys(s:HELP_DICT)), a:arglead, a:cmdline)
 endfunction
 
-function! mplayer#complete#_import_local_vars(dict, ...) abort
-  let attr = get(a:, 1, 'force')
-  call extend(a:dict, s:, attr)
+function! mplayer#complete#_import_local_var(name) abort
+  return s:[a:name]
 endfunction
 
 

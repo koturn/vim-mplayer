@@ -9,7 +9,16 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
+let s:V = vital#of('mplayer')
+let s:P = s:V.import('Process')
+let s:PM = s:V.import('ProcessManager')
+let s:DUMMY_COMMAND = mplayer#_import_local_var('DUMMY_COMMAND')
+let s:LINE_BREAK = mplayer#_import_local_var('LINE_BREAK')
+let s:HELP_DICT = mplayer#complete#_import_local_var('HELP_DICT')
+
 let s:mplayer = mplayer#new()
+let s:rt_sw = 0
+
 
 function! mplayer#cmd#play(...) abort
   call s:mplayer.play(a:000)
@@ -45,8 +54,14 @@ function! mplayer#cmd#set_equalizer(band_str) abort
   call s:mplayer.set_equalizer(a:band_str)
 endfunction
 
+
 function! mplayer#cmd#toggle_rt_timeinfo() abort
-  call s:mplayer.toggle_rt_timeinfo()
+  if s:rt_sw
+    call s:stop_rt_info()
+  else
+    call s:start_rt_info()
+  endif
+  let s:rt_sw = !s:rt_sw
 endfunction
 
 function! mplayer#cmd#set_seek(pos) abort
@@ -87,7 +102,10 @@ function! mplayer#cmd#show_file_info() abort
 endfunction
 
 function! mplayer#cmd#help(...) abort
-  call mplayer#help()
+  let arg = get(a:, 1, 'cmdlist')
+  if has_key(s:HELP_DICT, arg)
+    echo s:P.system(g:mplayer#mplayer . ' ' . s:HELP_DICT[arg])
+  endif
 endfunction
 
 function! mplayer#cmd#flush() abort
@@ -101,6 +119,62 @@ function! mplayer#cmd#flush() abort
 endfunction
 
 
+if g:mplayer#_use_job
+  function! s:show_timeinfo() abort
+    call ch_sendraw(s:mplayer.handle, join([
+          \ s:DUMMY_COMMAND, 'get_time_pos', 'get_time_length', 'get_percent_pos'
+          \], "\n") . "\n")
+    let text = substitute(s:mplayer._read(), "'", '', 'g')
+    let answers = map(split(text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
+    if len(answers) == 3
+      echo '[MPlayer] position:' s:to_timestr(answers[1]) '/' s:to_timestr(answers[0]) ' (' . answers[2] . '%)'
+    endif
+  endfunction
+else
+  function! s:show_timeinfo() abort
+    call s:PM.writeln(s:mplayer.handle, join([
+          \ s:DUMMY_COMMAND, 'get_time_pos', 'get_time_length', 'get_percent_pos'
+          \], "\n"))
+    let text = substitute(s:mplayer._read(), "'", '', 'g')
+    let answers = map(split(text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
+    if len(answers) == 3
+      echo '[MPlayer] position:' s:to_timestr(answers[1]) '/' s:to_timestr(answers[0]) ' (' . answers[2] . '%)'
+    endif
+  endfunction
+endif
+
+
+if g:mplayer#_use_timer
+  let s:timer_id = -1
+
+  function! s:start_rt_info() abort
+    if !s:mplayer.is_playing() | return | endif
+    let s:timer_id = timer_start(&updatetime, function('s:timer_update'), {'repeat': -1})
+  endfunction
+
+  function! s:stop_rt_info() abort
+    call timer_stop(s:timer_id)
+  endfunction
+
+  function! s:timer_update(timer_id) abort
+    call s:show_timeinfo()
+  endfunction
+else
+  function! s:start_rt_info() abort
+    if !s:mplayer.is_playing() | return | endif
+    execute 'autocmd! MPlayer CursorHold,CursorHoldI * call s:update()'
+  endfunction
+
+  function! s:stop_rt_info() abort
+    execute 'autocmd! MPlayer CursorHold,CursorHoldI'
+  endfunction
+
+  function! s:update() abort
+    call s:show_timeinfo()
+    call feedkeys(mode() ==# 'i' ? "\<C-g>\<ESC>" : "g\<ESC>", 'n')
+  endfunction
+endif
+
 function! s:to_timestr(secstr) abort
   let second = str2nr(a:secstr)
   let dec_part = str2float(a:secstr) - second
@@ -110,8 +184,6 @@ function! s:to_timestr(secstr) abort
   let second = second % 60
   return printf('%02d:%02d:%02d.%1d', hour, minute, second, float2nr(dec_part * 10))
 endfunction
-
-
 
 
 let &cpo = s:save_cpo

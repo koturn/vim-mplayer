@@ -30,10 +30,8 @@ let g:mplayer#enable_ctrlp_multi_select = get(g:, 'mplayer#enable_ctrlp_multi_se
 
 let s:V = vital#of('mplayer')
 let s:List = s:V.import('Data.List')
-let s:P = s:V.import('Process')
 let s:PM = s:V.import('ProcessManager')
 
-let s:PROCESS_NAME = 'mplayer' | lockvar s:PROCESS_NAME
 let s:WAIT_TIME = g:mplayer#_use_job ? 50 : 0.05 | lockvar s:WAIT_TIME
 let s:EXIT_KEYCODE = char2nr('q') | lockvar s:EXIT_KEYCODE
 if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
@@ -61,7 +59,7 @@ let s:INFO_COMMANDS = [
       \ 'get_audio_codec', 'get_audio_bitrate', 'get_audio_samples',
       \ 'get_video_codec', 'get_video_bitrate', 'get_video_resolution'
       \]
-lockvar s:INDO_COMMANDS
+lockvar s:INFO_COMMANDS
 let s:KEY_ACTION_DICT = {
       \ "\<Left>": 'seek -10',
       \ "\<Right>": 'seek 10',
@@ -70,13 +68,14 @@ let s:KEY_ACTION_DICT = {
       \}
 lockvar s:KEY_ACTION_DICT
 
-call mplayer#complete#_import_local_vars(s:, 'keep')
+let s:eq_presets = mplayer#complete#_import_local_var('eq_presets')
+let s:SUB_ARG_DICT = mplayer#complete#_import_local_var('SUB_ARG_DICT')
+let s:HELP_DICT = mplayer#complete#_import_local_var('HELP_DICT')
 
 
 let s:MPlayer = {
       \ 'mplayer': 'mplayer',
       \ 'option': 'option',
-      \ 'rt_sw': 0
       \}
 let s:instance_id = 0
 let s:mplayer_list = []
@@ -126,7 +125,6 @@ if g:mplayer#_use_job
 
   function! s:MPlayer.stop() abort
     if !has_key(self, 'handle') || !self.is_playing() | return | endif
-    call self.stop_rt_info()
     call job_stop(self.handle)
   endfunction
 
@@ -148,6 +146,10 @@ if g:mplayer#_use_job
     return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
   endfunction
 
+  function! s:MPlayer._writeln(text) abort
+    call ch_sendraw(self.handle, a:text . "\n")
+  endfunction
+
   function! s:MPlayer.flush() abort
     if !self.is_playing() | return | endif
     return [ch_readraw(self.handle), ch_readraw(self.handle, {'part': 'err'})]
@@ -156,48 +158,8 @@ if g:mplayer#_use_job
   function! s:MPlayer.get_file_info() abort
     if !self.is_playing() | return | endif
     call ch_sendraw(self.handle, s:DUMMY_COMMAND . "\n")
-    for cmd in s:INFO_COMMANDS
-      call ch_sendraw(self.handle, cmd . "\n")
-    endfor
-    let text = substitute(iconv(self._read(), s:TENC, &enc), "'", '', 'g')
-    let answers = map(split(text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
-    return len(answers) < 17 ? {} : {
-          \ 'time_pos': answers[0],
-          \ 'time_length': answers[1],
-          \ 'percent_pos': answers[2],
-          \ 'filename': answers[3],
-          \ 'meta': {
-          \   'title': answers[4],
-          \   'artist': answers[5],
-          \   'album': answers[6],
-          \   'year': answers[7],
-          \   'comment': answers[8],
-          \   'track': answers[9],
-          \   'genre': answers[10]
-          \ },
-          \ 'audio': {
-          \   'codec': answers[11],
-          \   'bitrate': answers[12],
-          \   'sample': answers[13]
-          \ },
-          \ 'video': {
-          \   'codec': answers[14],
-          \   'bitrate': answers[15],
-          \   'resolution': answers[16]
-          \ }
-          \}
-  endfunction
-
-  function! s:MPlayer.show_timeinfo() abort
-    call ch_sendraw(self.handle, s:DUMMY_COMMAND . "\n")
-    call ch_sendraw(self.handle, "get_time_pos\n")
-    call ch_sendraw(self.handle, "get_time_length\n")
-    call ch_sendraw(self.handle, "get_percent_pos\n")
-    let text = substitute(self._read(), "'", '', 'g')
-    let answers = map(split(text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
-    if len(answers) == 3
-      echo '[MPlayer] position:' s:to_timestr(answers[1]) '/' s:to_timestr(answers[0]) ' (' . answers[2] . '%)'
-    endif
+    call ch_sendraw(self.handle, join(s:INFO_COMMANDS, "\n") . "\n")
+    return s:get_file_info(substitute(iconv(self._read(), s:TENC, &enc), "'", '', 'g'))
   endfunction
 else
   function! mplayer#new() abort
@@ -245,7 +207,6 @@ else
 
   function! s:MPlayer.stop() abort
     if !self.is_playing() | return | endif
-    call self.stop_rt_info()
     call s:PM.kill(self.handle)
   endfunction
 
@@ -272,9 +233,20 @@ else
     return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
   endfunction
 
+  function! s:MPlayer._writeln(text) abort
+    call s:PM.writeln(self.handle, a:text)
+  endfunction
+
   function! s:MPlayer.flush() abort
     if !self.is_playing() | return | endif
     return s:PM.read(self.handle, [])
+  endfunction
+
+  function! s:MPlayer.get_file_info() abort
+    if !self.is_playing() | return | endif
+    call s:PM.writeln(self.handle, s:DUMMY_COMMAND)
+    call s:PM.writeln(self.handle, join(s:INFO_COMMANDS, "\n"))
+    return s:get_file_info(substitute(iconv(self._read(), s:TENC, &enc), "'", '', 'g'))
   endfunction
 endif
 
@@ -337,56 +309,10 @@ function! s:MPlayer.set_equalizer(band_str) abort
   endif
 endfunction
 
-function! mplayer#help(...) abort
-  let arg = get(a:, 1, 'cmdlist')
-  if has_key(s:HELP_DICT, arg)
-    echo s:P.system(g:mplayer#mplayer . ' ' . s:HELP_DICT[arg])
-  endif
+function! mplayer#_import_local_var(name) abort
+  return s:[a:name]
 endfunction
 
-
-function! s:MPlayer.toggle_rt_timeinfo() abort
-  if self.rt_sw
-    call self.stop_rt_info()
-  else
-    call self.start_rt_info()
-  endif
-  let self.rt_sw = !self.rt_sw
-endfunction
-
-if g:mplayer#_use_timer
-  let s:timer_dict = {}
-
-  let s:MPlayer.timer_id = -1
-
-  function! s:MPlayer.start_rt_info() abort
-    if !self.is_playing() | return | endif
-    let self.timer_id = timer_start(&updatetime, function('s:timer_update'), {'repeat': -1})
-    let s:timer_dict[self.timer_id] = self
-  endfunction
-
-  function! s:MPlayer.stop_rt_info() abort
-    call timer_stop(self.timer_id)
-  endfunction
-
-  function! s:timer_update(timer_id) abort
-    call s:timer_dict[a:timer_id].show_timeinfo()
-  endfunction
-else
-  function! s:MPlayer.start_rt_info() abort
-    if !self.is_playing() | return | endif
-    execute 'autocmd! MPlayer' . self.id 'CursorHold,CursorHoldI * call s:mplayer_list[' . self.id . '].update()'
-  endfunction
-
-  function! s:MPlayer.stop_rt_info() abort
-    execute 'autocmd! MPlayer' . self.id 'CursorHold,CursorHoldI'
-  endfunction
-
-  function! s:MPlayer.update() abort
-    call self.show_timeinfo()
-    call feedkeys(mode() ==# 'i' ? "\<C-g>\<ESC>" : "g\<ESC>", 'n')
-  endfunction
-endif
 
 function! s:make_loadcmds(args) abort
   let loadcmds = []
@@ -412,14 +338,33 @@ function! s:process_file(file) abort
   return (a:file =~# '\.\%(m3u\|m3u8\|pls\|wax\|wpl\|xspf\)$' ? 'loadlist ' : 'loadfile ') . string(a:file) . ' 1'
 endfunction
 
-function! s:to_timestr(secstr) abort
-  let second = str2nr(a:secstr)
-  let dec_part = str2float(a:secstr) - second
-  let hour = second / 3600
-  let second = second % 3600
-  let minute = second / 60
-  let second = second % 60
-  return printf('%02d:%02d:%02d.%1d', hour, minute, second, float2nr(dec_part * 10))
+function! s:get_file_info(text) abort
+  let answers = map(split(a:text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
+  return len(answers) < 17 ? {} : {
+        \ 'time_pos': answers[0],
+        \ 'time_length': answers[1],
+        \ 'percent_pos': answers[2],
+        \ 'filename': answers[3],
+        \ 'meta': {
+        \   'title': answers[4],
+        \   'artist': answers[5],
+        \   'album': answers[6],
+        \   'year': answers[7],
+        \   'comment': answers[8],
+        \   'track': answers[9],
+        \   'genre': answers[10]
+        \ },
+        \ 'audio': {
+        \   'codec': answers[11],
+        \   'bitrate': answers[12],
+        \   'sample': answers[13]
+        \ },
+        \ 'video': {
+        \   'codec': answers[14],
+        \   'bitrate': answers[15],
+        \   'resolution': answers[16]
+        \ }
+        \}
 endfunction
 
 function! s:to_second(timestr) abort
