@@ -24,13 +24,11 @@ endif
 let g:mplayer#suffixes = get(g:, 'mplayer#suffixes', ['*'])
 let g:mplayer#enable_ctrlp_multi_select = get(g:, 'mplayer#enable_ctrlp_multi_select', 1)
 
-
 let s:V = vital#of('mplayer')
 let s:List = s:V.import('Data.List')
 let s:P = s:V.import('Process')
 let s:PM = s:V.import('ProcessManager')
 
-let s:rt_sw = 0
 let s:PROCESS_NAME = 'mplayer' | lockvar s:PROCESS_NAME
 let s:WAIT_TIME = 0.05 | lockvar s:WAIT_TIME
 let s:EXIT_KEYCODE = char2nr('q') | lockvar s:EXIT_KEYCODE
@@ -46,8 +44,12 @@ else
   let s:LINE_BREAK = "\n"
 endif
 lockvar s:LINE_BREAK
+
 let s:DUMMY_COMMAND = 'get_property __NONE__'
+lockvar s:DUMMY_COMMAND
 let s:DUMMY_PATTERN = '.*ANS_ERROR=PROPERTY_UNKNOWN' . s:LINE_BREAK
+lockvar s:DUMMY_PATTERN
+
 let s:INFO_COMMANDS = [
       \ 'get_time_pos', 'get_time_length', 'get_percent_pos', 'get_file_name',
       \ 'get_meta_title', 'get_meta_artist', 'get_meta_album', 'get_meta_year',
@@ -55,105 +57,16 @@ let s:INFO_COMMANDS = [
       \ 'get_audio_codec', 'get_audio_bitrate', 'get_audio_samples',
       \ 'get_video_codec', 'get_video_bitrate', 'get_video_resolution'
       \]
+lockvar s:INDO_COMMANDS
 let s:KEY_ACTION_DICT = {
       \ "\<Left>": 'seek -10',
       \ "\<Right>": 'seek 10',
       \ "\<Up>": 'seek 60',
       \ "\<Down>": 'seek -60'
       \}
-lockvar s:DUMMY_COMMAND
-lockvar s:DUMMY_PATTERN
-lockvar s:INDO_COMMANDS
+lockvar s:KEY_ACTION_DICT
 
-let s:eq_presets = {
-      \ 'acoustic': '0:1:2:0:0:0:0:0:2:2',
-      \ 'bass': '3:2:1:0:-1:-2:-3:-4:-5:-6',
-      \ 'blues': '-1:0:2:1:0:0:0:0:-1:-3',
-      \ 'boost': '-1:1:3:2:1:1:2:3:1:-1',
-      \ 'classic': '-3:3:3:0:-3:-3:-3:-3:-1:-1',
-      \ 'country': '-1:0:0:2:2:0:0:0:3:3',
-      \ 'dance': '-3:2:3:-1:-3:-3:-2:-2:2:2',
-      \ 'eargasm': '-5:-2:1:-1:-2:-3:-1:-4:3:0',
-      \ 'folk': '-1:0:1:0:2:0:0:0:2:0',
-      \ 'grunge': '-4:0:0:-2:0:0:2:3:0:-3',
-      \ 'jazz': '-1:-1:-1:2:2:2:-1:1:3:3',
-      \ 'koturn': '0:1:3:2:1:0:1:2:1:0',
-      \ 'metal': '-4:0:0:0:0:0:3:0:3:1',
-      \ 'new_age': '0:3:3:0:0:0:0:0:1:1',
-      \ 'normal': '2:2:2:2:2:2:2:2:2:2',
-      \ 'normalZero': '0:0:0:0:0:0:0:0:0:0',
-      \ 'oldies': '-2:0:2:1:0:0:0:0:-2:-5',
-      \ 'opera': '-2:-2:-2:1:2:0:3:0:-2:-2',
-      \ 'perfect': '-5:-2:1:-1:-2:-3:-1:1:3:0',
-      \ 'rap': '-4:-3:-1:-1:-4:-4:-3:-3:1:3',
-      \ 'reggae': '-2:-1:-1:-4:-1:2:3:-1:2:3',
-      \ 'rock': '-2:0:1:2:-2:-2:-1:-1:3:3',
-      \ 'speech': '-2:0:2:1:0:0:0:0:-2:-5',
-      \ 'swing': '-2:-1:-1:-1:2:2:-1:1:3:3',
-      \ 'techno': '-8:-1:2:-3:-3:-4:-2:-2:3:3',
-      \}
-let s:SUB_ARG_DICT = {}
-let s:SUB_ARG_DICT.dvdnav = sort([
-      \ 'up', 'down', 'left', 'right',
-      \ 'menu', 'select', 'prev', 'mouse'
-      \])
-let s:SUB_ARG_DICT.menu = sort(['up', 'down', 'ok', 'cancel', 'hide'])
-let s:SUB_ARG_DICT.step_property = sort([
-      \ 'osdlevel',
-      \ 'speed', 'loop',
-      \ 'chapter',
-      \ 'angle',
-      \ 'percent_pos', 'time_pos',
-      \ 'volume', 'balance', 'mute',
-      \ 'audio_delay',
-      \ 'switch_audio', 'switch_angle', 'switch_title',
-      \ 'capturing', 'fullscreen', 'deinterlace',
-      \ 'ontop', 'rootwin',
-      \ 'border', 'framedropping',
-      \ 'gamma', 'brightness', 'contrast', 'saturation',
-      \ 'hue', 'panscan', 'vsync',
-      \ 'switch_video', 'switch_program',
-      \ 'sub', 'sub_source', 'sub_file', 'sub_vob', 'sub_demux', 'sub_delay',
-      \ 'sub_pos', 'sub_alignment', 'sub_visibility',
-      \ 'sub_forced_only', 'sub_scale',
-      \ 'tv_brightness', 'tv_contrast', 'tv_saturation', 'tv_hue',
-      \ 'teletext_page', 'teletext_subpage', 'teletext_mode',
-      \ 'teletext_format', 'teletext_half_page'
-      \])
-let s:SUB_ARG_DICT.set_property = sort(s:SUB_ARG_DICT.step_property + ['stream_pos'])
-let s:SUB_ARG_DICT.get_property = sort(s:SUB_ARG_DICT.set_property + [
-      \ 'pause',
-      \ 'filename', 'path',
-      \ 'demuxer',
-      \ 'stream_start', 'stream_end', 'stream_length', 'stream_time_pos',
-      \ 'chapters', 'length',
-      \ 'metadata', 'metadata/album', 'metadata/artist', 'metadata/comment',
-      \ 'metadata/genre', 'metadata/title', 'metadata/track','metadata/year',
-      \ 'audio_format', 'audio_codec', 'audio_bitrate',
-      \ 'samplerate', 'channels',
-      \ 'video_format', 'video_codec', 'video_bitrate',
-      \ 'width', 'height', 'fps', 'aspect'
-      \])
-lockvar s:SUB_ARG_DICT
-
-let s:HELP_DICT = {
-      \ 'cmdlist': '-input cmdlist',
-      \ 'af': '-af help',
-      \ 'ao': '-ao help',
-      \ 'vf': '-vf help',
-      \ 'vo': '-vo help'
-      \}
-lockvar s:HELP_DICT
-
-
-
-
-let s:MPlayer = {
-      \ 'mplayer': 'mplayer',
-      \ 'option': 'option'
-      \}
-let s:instance_id = 0
-let s:mplayer_list = []
+call mplayer#complete#_import_local_vars(s:, 'keep')
 
 
 function! mplayer#new() abort
@@ -174,6 +87,13 @@ function! mplayer#new() abort
 endfunction
 
 
+let s:MPlayer = {
+      \ 'mplayer': 'mplayer',
+      \ 'option': 'option'
+      \}
+let s:instance_id = 0
+let s:mplayer_list = []
+
 function! s:MPlayer.start(custom_option) abort
   if !executable(self.mplayer)
     echoerr 'Error: Please install mplayer.'
@@ -192,7 +112,6 @@ function! s:MPlayer.start(custom_option) abort
   call self._read()
 endfunction
 
-
 function! s:MPlayer.play(...) abort
   let pos = match(a:000, '^--$')
   if pos == -1
@@ -201,10 +120,8 @@ function! s:MPlayer.play(...) abort
   let custom_option = join(a:000[pos + 1 :], ' ')
   call self.start(custom_option)
   let filelist = a:000[: pos - 1]
-  echo filelist
-  call self.enqueue(s:make_loadcmds(filelist))
+  call self.enqueue(filelist)
 endfunction
-
 
 function! s:MPlayer.enqueue(...) abort
   if !self.is_playing()
@@ -218,13 +135,11 @@ function! s:MPlayer.enqueue(...) abort
   call self._read(s:WAIT_TIME)
 endfunction
 
-
 function! s:MPlayer.stop() abort
   if !self.is_playing() | return | endif
-  " call s:stop_rt_info()
+  call self.stop_rt_info()
   call s:PM.kill(self.handle)
 endfunction
-
 
 function! s:MPlayer.is_playing() abort
   let status = 'dead'
@@ -386,14 +301,13 @@ function! s:MPlayer.help(...) abort
   endif
 endfunction
 
-
 function! s:MPlayer.toggle_rt_timeinfo() abort
-  if s:rt_sw
+  if self.rt_sw
     call self.stop_rt_info()
   else
     call self.start_rt_info()
   endif
-  let s:rt_sw = !s:rt_sw
+  let self.rt_sw = !self.rt_sw
 endfunction
 
 function! s:MPlayer.start_rt_info() abort
@@ -408,45 +322,6 @@ endfunction
 function! s:MPlayer.update() abort
   call self.show_timeinfo()
   call feedkeys(mode() ==# 'i' ? "\<C-g>\<ESC>" : "g\<ESC>", 'n')
-endfunction
-
-
-function! mplayer#cmd_complete(arglead, cmdline, cursorpos) abort
-  if !exists('s:cmd_complete_cache')
-    let cmdlist = s:P.system(g:mplayer#mplayer . ' -input cmdlist')
-    let s:cmd_complete_cache = sort(map(split(cmdlist, "\n"), 'split(v:val, " \\+")[0]'))
-  endif
-  let args = split(split(a:cmdline, '[^\\]\zs|')[-1], '\s\+')
-  let nargs = len(args)
-  let candidates = []
-  if has_key(s:SUB_ARG_DICT, args[-1])
-    let candidates = s:SUB_ARG_DICT[args[-1]]
-  elseif nargs == 3 && a:arglead !=# '' && has_key(s:SUB_ARG_DICT, args[-2])
-    let candidates = s:SUB_ARG_DICT[args[-2]]
-  elseif nargs == 1 || (nargs == 2 && a:arglead !=# '')
-    let candidates = s:cmd_complete_cache
-  endif
-  return s:match_filter(copy(candidates), a:arglead)
-endfunction
-
-function! mplayer#step_property_complete(arglead, cmdline, cursorpos) abort
-  return s:first_arg_complete(copy(s:SUB_ARG_DICT.step_property), a:arglead, a:cmdline)
-endfunction
-
-function! mplayer#get_property_complete(arglead, cmdline, cursorpos) abort
-  return s:first_arg_complete(copy(s:SUB_ARG_DICT.get_property), a:arglead, a:cmdline)
-endfunction
-
-function! mplayer#set_property_complete(arglead, cmdline, cursorpos) abort
-  return s:first_arg_complete(copy(s:SUB_ARG_DICT.set_property), a:arglead, a:cmdline)
-endfunction
-
-function! mplayer#equlizer_complete(arglead, cmdline, cursorpos) abort
-  return s:first_arg_complete(sort(keys(s:eq_presets)), a:arglead, a:cmdline)
-endfunction
-
-function! mplayer#help_complete(arglead, cmdline, cursorpos) abort
-  return s:first_arg_complete(sort(keys(s:HELP_DICT)), a:arglead, a:cmdline)
 endfunction
 
 
@@ -496,18 +371,6 @@ function! s:to_second(timestr) abort
   else
     return -1
   endif
-endfunction
-
-function! s:first_arg_complete(candidates, arglead, cmdline) abort
-  let nargs = len(split(split(a:cmdline, '[^\\]\zs|')[-1], '\s\+'))
-  if nargs == 1 || (nargs == 2 && a:arglead !=# '')
-    return s:match_filter(a:candidates, a:arglead)
-  endif
-endfunction
-
-function! s:match_filter(candidates, arglead) abort
-  let arglead = tolower(a:arglead)
-  return filter(a:candidates, '!stridx(tolower(v:val), arglead)')
 endfunction
 
 
