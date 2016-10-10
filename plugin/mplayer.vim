@@ -26,6 +26,7 @@ command! -bar -nargs=1 MPlayerLoop call mplayer#cmd#command('loop ' . <q-args> .
 command! -bar -nargs=1 MPlayerSeek call mplayer#cmd#set_seek(<f-args>)
 command! -bar -nargs=0 MPlayerSeekToHead call mplayer#cmd#command('seek 0 1')
 command! -bar -nargs=0 MPlayerSeekToEnd call mplayer#cmd#command('seek 100 1')
+command! -bar -nargs=0 MPlayerSeekBar call mplayer#cmd#seekbar()
 command! -bar -nargs=0 MPlayerOperateWithKey call mplayer#cmd#operate_with_key()
 command! -bar -nargs=? MPlayerPrev call mplayer#cmd#prev(<f-args>)
 command! -bar -nargs=? MPlayerNext call mplayer#cmd#next(<f-args>)

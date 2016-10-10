@@ -101,6 +101,40 @@ function! mplayer#cmd#show_file_info() abort
   endif
 endfunction
 
+function! mplayer#cmd#seekbar() abort
+  noautocmd botright 2 new
+  set nobuflisted bufhidden=unload buftype=nofile nonumber
+  if &columns < 40
+    echoerr 'column must be 30 or more'
+  endif
+  let offset = 17 + strlen('position')
+  let max = &columns - (offset + 7)
+  let level = max * str2nr(s:mplayer.command('get_percent_pos')) / 100
+  let p = level * 100 / max
+  let [winnr, c] = [winnr(), '']
+  try
+    while c != char2nr('q')
+      call setline(1, printf('position (%3d / 100):   [%s]', p, repeat('|', level) . repeat(' ', max - level)))
+      redraw
+      let c = getchar()
+      if c is# "\<LeftMouse>" && v:mouse_win == winnr
+        let level = v:mouse_col - offset
+      elseif c is char2nr('h')
+        let level -= 1
+      elseif c is char2nr('l')
+        let level += 1
+      endif
+      let level = level > max ? max : level < 0 ? 0 : level
+      let p = level * 100 / max
+      call s:mplayer.set_seek(p . '%')
+    endwhile
+  catch
+    echoerr v:exception
+  finally
+    quit
+  endtry
+endfunction
+
 function! mplayer#cmd#help(...) abort
   let arg = get(a:, 1, 'cmdlist')
   if has_key(s:HELP_DICT, arg)

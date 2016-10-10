@@ -277,7 +277,7 @@ function! s:MPlayer.prev(...) abort
 endfunction
 
 function! s:MPlayer.command(cmd, ...) abort
-  if !self._is_playing() | return | endif
+  if !self.is_playing() | return | endif
   let is_iconv = get(a:, 1, 0)
   let str = self._command(a:cmd)
   if is_iconv
@@ -290,8 +290,9 @@ function! s:MPlayer.set_seek(pos) abort
   let second = s:to_second(a:pos)
   let lastchar = a:pos[-1 :]
   return second != -1 ? self._command('seek ' . second . ' 2')
-        \ lastchar ==# 's' || lastchar =~# '\d' ? self._command('seek ' . a:pos . ' 2')
-        \ lastchar ==# '%' ? self._command('seek ' . a:pos . ' 1')
+        \ : lastchar ==# 's' || lastchar =~# '\d' ? self._command('seek ' . a:pos . ' 2')
+        \ : lastchar ==# '%' ? self._command('seek ' . a:pos . ' 1')
+        \ : ''
 endfunction
 
 function! s:MPlayer.set_speed(speed, is_scaletempo) abort
