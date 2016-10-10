@@ -345,11 +345,7 @@ function! s:MPlayer.set_seek(pos) abort
 endfunction
 
 function! s:MPlayer.set_speed(speed, is_scaletempo) abort
-  if a:is_scaletempo
-    echo self._command('af_add scaletempo')
-  else
-    echo self._command('af_del scaletempo')
-  endif
+  echo a:is_scaletempo ? self._command('af_add scaletempo') : self._command('af_del scaletempo')
   echo self._command('speed_set ' . a:speed)
 endfunction
 
