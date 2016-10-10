@@ -105,8 +105,8 @@ if g:mplayer#_use_job
       return
     endif
     call self.stop()
-    let self.handle = job_start(join(self.mplayer, self.option, a:custom_option), {
-          \ 'out_mode': 'raw',
+    let self.handle = job_start(join([self.mplayer, self.option, a:custom_option]), {
+          \ 'out_mode': 'raw'
           \})
     call self._read()
   endfunction
@@ -150,18 +150,10 @@ if g:mplayer#_use_job
 
   function! s:MPlayer.flush() abort
     if !self.is_playing() | return | endif
-    let r = [ch_readraw(self.handle), ch_readraw(self.handle, {'part': 'err'})]
-    if r[0] !=# ''
-      echo '[stdout]'
-      echo r[0]
-    endif
-    if r[1] !=# ''
-      echo '[stderr]'
-      echo r[1]
-    endif
+    return [ch_readraw(self.handle), ch_readraw(self.handle, {'part': 'err'})]
   endfunction
 
-  function! s:MPlayer.show_file_info() abort
+  function! s:MPlayer.get_file_info() abort
     if !self.is_playing() | return | endif
     call ch_sendraw(self.handle, s:DUMMY_COMMAND . "\n")
     for cmd in s:INFO_COMMANDS
@@ -169,35 +161,31 @@ if g:mplayer#_use_job
     endfor
     let text = substitute(iconv(self._read(), s:TENC, &enc), "'", '', 'g')
     let answers = map(split(text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
-    if len(answers) == 0 | return | endif
-    echo '[STANDARD INFORMATION]'
-    try
-      echo '  posiotion: ' s:to_timestr(answers[1]) '/' s:to_timestr(answers[0]) ' (' . answers[2] . '%)'
-      echo '  filename:  ' answers[3]
-      echo '[META DATA]'
-      echo '  title:     ' answers[4]
-      echo '  artist:    ' answers[5]
-      echo '  album:     ' answers[6]
-      echo '  year:      ' answers[7]
-      echo '  comment:   ' answers[8]
-      echo '  track:     ' answers[9]
-      echo '  genre:     ' answers[10]
-      echo '[AUDIO]'
-      echo '  codec:     ' answers[11]
-      echo '  bitrate:   ' answers[12]
-      echo '  sample:    ' answers[13]
-      if answers[14] !=# '' && answers[15] !=# '' && answers[16] !=# ''
-        echo '[VIDEO]'
-        echo '  codec:     ' answers[14]
-        echo '  bitrate:   ' answers[15]
-        echo '  resolution:' answers[16]
-      endif
-    catch /^Vim\%((\a\+)\)\=:E684: /
-      echon ' '
-      echohl ErrorMsg
-      echon '... Failed to get file information'
-      echohl None
-    endtry
+    return len(answers) < 17 ? {} : {
+          \ 'time_pos': answers[0],
+          \ 'time_length': answers[1],
+          \ 'percent_pos': answers[2],
+          \ 'filename': answers[3],
+          \ 'meta': {
+          \   'title': answers[4],
+          \   'artist': answers[5],
+          \   'album': answers[6],
+          \   'year': answers[7],
+          \   'comment': answers[8],
+          \   'track': answers[9],
+          \   'genre': answers[10]
+          \ },
+          \ 'audio': {
+          \   'codec': answers[11],
+          \   'bitrate': answers[12],
+          \   'sample': answers[13]
+          \ },
+          \ 'video': {
+          \   'codec': answers[14],
+          \   'bitrate': answers[15],
+          \   'resolution': answers[16]
+          \ }
+          \}
   endfunction
 
   function! s:MPlayer.show_timeinfo() abort
@@ -286,15 +274,7 @@ else
 
   function! s:MPlayer.flush() abort
     if !self.is_playing() | return | endif
-    let r = s:PM.read(self.handle, [])
-    if r[0] !=# ''
-      echo '[stdout]'
-      echo r[0]
-    endif
-    if r[1] !=# ''
-      echo '[stderr]'
-      echo r[1]
-    endif
+    return s:PM.read(self.handle, [])
   endfunction
 endif
 
@@ -312,14 +292,16 @@ endfunction
 
 function! s:MPlayer.next(...) abort
   let n = get(a:, 1, 1)
-  echo iconv(self._command('pt_step ' . n), s:TENC, &enc)
+  let text iconv(self._command('pt_step ' . n), s:TENC, &enc)
   call self._read()
+  return text
 endfunction
 
 function! s:MPlayer.prev(...) abort
   let n = -get(a:, 1, 1)
-  echo iconv(self._command('pt_step ' . n), s:TENC, &enc)
+  let text iconv(self._command('pt_step ' . n), s:TENC, &enc)
   call self._read()
+  return text
 endfunction
 
 function! s:MPlayer.command(cmd, ...) abort
@@ -329,24 +311,22 @@ function! s:MPlayer.command(cmd, ...) abort
   if is_iconv
     let str = iconv(str, s:TENC, &enc)
   endif
-  echo matchstr(substitute(str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\zs.*$')
+  return matchstr(substitute(str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\zs.*$')
 endfunction
 
 function! s:MPlayer.set_seek(pos) abort
   let second = s:to_second(a:pos)
   let lastchar = a:pos[-1 :]
-  if second != -1
-    echo self._command('seek ' . second . ' 2')
-  elseif lastchar ==# 's' || lastchar =~# '\d'
-    echo self._command('seek ' . a:pos . ' 2')
-  elseif lastchar ==# '%'
-    echo self._command('seek ' . a:pos . ' 1')
-  endif
+  return second != -1 ? self._command('seek ' . second . ' 2')
+        \ lastchar ==# 's' || lastchar =~# '\d' ? self._command('seek ' . a:pos . ' 2')
+        \ lastchar ==# '%' ? self._command('seek ' . a:pos . ' 1')
 endfunction
 
 function! s:MPlayer.set_speed(speed, is_scaletempo) abort
-  echo a:is_scaletempo ? self._command('af_add scaletempo') : self._command('af_del scaletempo')
-  echo self._command('speed_set ' . a:speed)
+  return [
+        \ a:is_scaletempo ? self._command('af_add scaletempo') : self._command('af_del scaletempo'),
+        \ self._command('speed_set ' . a:speed)
+        \]
 endfunction
 
 function! s:MPlayer.set_equalizer(band_str) abort
@@ -357,7 +337,7 @@ function! s:MPlayer.set_equalizer(band_str) abort
   endif
 endfunction
 
-function! s:MPlayer.help(...) abort
+function! mplayer#help(...) abort
   let arg = get(a:, 1, 'cmdlist')
   if has_key(s:HELP_DICT, arg)
     echo s:P.system(g:mplayer#mplayer . ' ' . s:HELP_DICT[arg])
@@ -376,6 +356,8 @@ endfunction
 
 if g:mplayer#_use_timer
   let s:timer_dict = {}
+
+  let s:MPlayer.timer_id = -1
 
   function! s:MPlayer.start_rt_info() abort
     if !self.is_playing() | return | endif
