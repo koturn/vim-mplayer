@@ -74,8 +74,8 @@ let s:HELP_DICT = mplayer#complete#_import_local_var('HELP_DICT')
 
 
 let s:MPlayer = {
-      \ 'mplayer': 'mplayer',
-      \ 'option': 'option',
+      \ 'mplayer': g:mplayer#mplayer,
+      \ 'option': g:mplayer#option,
       \}
 let s:instance_id = 0
 let s:mplayer_list = []
@@ -84,8 +84,6 @@ let s:mplayer_list = []
 if g:mplayer#_use_job
   function! mplayer#new() abort
     let mplayer = deepcopy(s:MPlayer)
-    let mplayer.mplayer = g:mplayer#mplayer
-    let mplayer.option = g:mplayer#option
     let mplayer.id = s:instance_id
     let s:instance_id += 1
     call add(s:mplayer_list, mplayer)
@@ -164,8 +162,6 @@ if g:mplayer#_use_job
 else
   function! mplayer#new() abort
     let mplayer = deepcopy(s:MPlayer)
-    let mplayer.mplayer = g:mplayer#mplayer
-    let mplayer.option = g:mplayer#option
     let mplayer.handle = 'mplayer-' . s:instance_id
     let mplayer.id = s:instance_id
     let s:instance_id += 1
