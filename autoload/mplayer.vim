@@ -73,7 +73,8 @@ call mplayer#complete#_import_local_vars(s:, 'keep')
 
 let s:MPlayer = {
       \ 'mplayer': 'mplayer',
-      \ 'option': 'option'
+      \ 'option': 'option',
+      \ 'rt_sw': 0
       \}
 let s:instance_id = 0
 let s:mplayer_list = []
@@ -87,6 +88,12 @@ if g:mplayer#_use_job
     let mplayer.id = s:instance_id
     let s:instance_id += 1
     call add(s:mplayer_list, mplayer)
+
+    let group = 'MPlayer' . mplayer.id
+    execute 'augroup' group
+    execute '  autocmd!'
+    execute '  autocmd' group 'VimLeave * call s:mplayer_list[' . mplayer.id . '].stop()'
+    execute 'augroup END'
     return mplayer
   endfunction
 
