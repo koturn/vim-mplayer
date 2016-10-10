@@ -48,7 +48,7 @@ function! s:prompt(context) abort
 endfunction
 
 function! s:submitted(context, line) abort
-  call mplayer#enqueue(len(a:context.inputs) == 0 ?
+  call mplayer#cmd#enqueue(len(a:context.inputs) == 0 ?
         \ (s:dir . a:context.selection) : map(a:context.inputs, 's:dir . v:val'))
 endfunction
 

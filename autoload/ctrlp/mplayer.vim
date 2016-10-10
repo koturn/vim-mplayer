@@ -57,7 +57,7 @@ endfunction
 
 function! s:accept(mode, str) abort
   call ctrlp#exit()
-  call mplayer#enqueue(a:str)
+  call mplayer#cmd#enqueue(a:str)
 endfunction
 
 function! s:exit() abort
@@ -68,7 +68,7 @@ endfunction
 
 
 function! s:enqueue_hook() abort
-  call mplayer#enqueue(expand('%:p'))
+  call mplayer#cmd#enqueue(expand('%:p'))
   bwipeout
 endfunction
 

@@ -12,7 +12,7 @@ set cpo&vim
 
 
 function! s:sink(candidates) abort
-  call mplayer#enqueue(a:candidates)
+  call mplayer#cmd#enqueue(a:candidates)
 endfunction
 
 let s:option = {

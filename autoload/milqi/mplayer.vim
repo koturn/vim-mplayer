@@ -21,7 +21,7 @@ endfunction
 
 function! s:define.accept(context, candidate) abort
   call milqi#exit()
-  call mplayer#enqueue(s:dir . a:candidate)
+  call mplayer#cmd#enqueue(s:dir . a:candidate)
 endfunction
 
 

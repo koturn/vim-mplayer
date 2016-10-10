@@ -21,7 +21,7 @@ let s:kind.action_table.play_music = {
       \ 'is_selectable': 1
       \}
 function! s:kind.action_table.play_music.func(candidates) abort
-  call mplayer#enqueue(map(a:candidates, 'v:val.action__path'))
+  call mplayer#cmd#enqueue(map(a:candidates, 'v:val.action__path'))
 endfunction
 
 
