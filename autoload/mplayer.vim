@@ -105,7 +105,7 @@ if g:mplayer#_use_job
       return
     endif
     call self.stop()
-    let self.handle = job_start(self.mplayer . ' ' . self.option . ' '. a:custom_option, {
+    let self.handle = job_start(join(self.mplayer, self.option, a:custom_option), {
           \ 'out_mode': 'raw',
           \})
     call self._read()
@@ -126,7 +126,7 @@ if g:mplayer#_use_job
 
   function! s:MPlayer.stop() abort
     if !has_key(self, 'handle') || !self.is_playing() | return | endif
-    " call self.stop_rt_info()
+    call self.stop_rt_info()
     call job_stop(self.handle)
   endfunction
 
@@ -239,11 +239,7 @@ else
       return
     endif
     call self.stop()
-    call s:PM.touch(
-          \ self.handle, self.mplayer . ' '
-          \ . self.option . ' '
-          \ . a:custom_option
-          \)
+    call s:PM.touch(self.handle, join([self.mplayer, self.option, a:custom_option]))
     call self._read()
   endfunction
 
