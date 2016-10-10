@@ -22,6 +22,8 @@ else
         \ '-nofontconfig -idle -quiet -slave -af equalizer=0:0:0:0:0:0:0:0:0:0')
 endif
 let g:mplayer#suffixes = get(g:, 'mplayer#suffixes', ['*'])
+let g:mplayer#_use_job = get(g:, 'mplayer#_use_job', has('job'))
+
 let g:mplayer#enable_ctrlp_multi_select = get(g:, 'mplayer#enable_ctrlp_multi_select', 1)
 
 let s:V = vital#of('mplayer')
@@ -30,7 +32,7 @@ let s:P = s:V.import('Process')
 let s:PM = s:V.import('ProcessManager')
 
 let s:PROCESS_NAME = 'mplayer' | lockvar s:PROCESS_NAME
-let s:WAIT_TIME = 0.05 | lockvar s:WAIT_TIME
+let s:WAIT_TIME = g:mplayer#_use_job ? 50 : 0.05 | lockvar s:WAIT_TIME
 let s:EXIT_KEYCODE = char2nr('q') | lockvar s:EXIT_KEYCODE
 if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
   let s:TENC = 'cp932'
@@ -69,24 +71,6 @@ lockvar s:KEY_ACTION_DICT
 call mplayer#complete#_import_local_vars(s:, 'keep')
 
 
-function! mplayer#new() abort
-  let mplayer = deepcopy(s:MPlayer)
-  let mplayer.mplayer = g:mplayer#mplayer
-  let mplayer.option = g:mplayer#option
-  let mplayer.handle = 'mplayer-' . s:instance_id
-  let mplayer.id = s:instance_id
-  let s:instance_id += 1
-  call add(s:mplayer_list, mplayer)
-
-  let group = 'MPlayer' . mplayer.id
-  execute 'augroup' group
-  execute '  autocmd!'
-  execute '  autocmd' group 'VimLeave * call s:mplayer_list[' . mplayer.id . '].stop()'
-  execute 'augroup END'
-  return mplayer
-endfunction
-
-
 let s:MPlayer = {
       \ 'mplayer': 'mplayer',
       \ 'option': 'option'
@@ -94,23 +78,221 @@ let s:MPlayer = {
 let s:instance_id = 0
 let s:mplayer_list = []
 
-function! s:MPlayer.start(custom_option) abort
-  if !executable(self.mplayer)
-    echoerr 'Error: Please install mplayer.'
-    return
-  endif
-  if !s:PM.is_available()
-    echoerr 'Error: vimproc is unavailable.'
-    return
-  endif
-  call self.stop()
-  call s:PM.touch(
-        \ self.handle, self.mplayer . ' '
-        \ . self.option . ' '
-        \ . a:custom_option
-        \)
-  call self._read()
-endfunction
+
+if g:mplayer#_use_job
+  function! mplayer#new() abort
+    let mplayer = deepcopy(s:MPlayer)
+    let mplayer.mplayer = g:mplayer#mplayer
+    let mplayer.option = g:mplayer#option
+    let mplayer.id = s:instance_id
+    let s:instance_id += 1
+    call add(s:mplayer_list, mplayer)
+    return mplayer
+  endfunction
+
+  function! s:MPlayer.start(custom_option) abort
+    if !executable(self.mplayer)
+      echoerr 'Error: Please install mplayer.'
+      return
+    endif
+    call self.stop()
+    let self.handle = job_start(self.mplayer . ' ' . self.option . ' '. a:custom_option, {
+          \ 'out_mode': 'raw',
+          \})
+    call self._read()
+  endfunction
+
+  function! s:MPlayer.enqueue(...) abort
+    if !self.is_playing()
+      let self.handle = job_start(self.mplayer . ' ' . self.option . ' '. a:custom_option, {
+            \ 'out_mode': 'raw'
+            \})
+    endif
+    for cmd in s:make_loadcmds(s:List.flatten(a:000))
+      call ch_sendraw(self.handle, s:DUMMY_COMMAND . "\n")
+      call ch_sendraw(self.handle, cmd . "\n")
+    endfor
+    call self._read(s:WAIT_TIME)
+  endfunction
+
+  function! s:MPlayer.stop() abort
+    if !has_key(self, 'handle') || !self.is_playing() | return | endif
+    " call self.stop_rt_info()
+    call job_stop(self.handle)
+  endfunction
+
+  function! s:MPlayer.is_playing() abort
+    return job_status(self.handle) ==# 'run'
+  endfunction
+
+  function! s:MPlayer._command(cmd) abort
+    if !self.is_playing() | return | endif
+    call ch_sendraw(self.handle, s:DUMMY_COMMAND . "\n")
+    call ch_sendraw(self.handle, a:cmd . "\n")
+    return self._read()
+  endfunction
+
+  function! s:MPlayer._read(...) abort
+    let wait_time = get(a:, 1, 50)
+    let pattern = get(a:, 2, [])
+    let raw_text = ch_readraw(self.handle, {'timeout': wait_time})
+    return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
+  endfunction
+
+  function! s:MPlayer.flush() abort
+    if !self.is_playing() | return | endif
+    let r = [ch_readraw(self.handle), ch_readraw(self.handle, {'part': 'err'})]
+    if r[0] !=# ''
+      echo '[stdout]'
+      echo r[0]
+    endif
+    if r[1] !=# ''
+      echo '[stderr]'
+      echo r[1]
+    endif
+  endfunction
+
+  function! s:MPlayer.show_file_info() abort
+    if !self.is_playing() | return | endif
+    call ch_sendraw(self.handle, s:DUMMY_COMMAND . "\n")
+    for cmd in s:INFO_COMMANDS
+      call ch_sendraw(self.handle, cmd . "\n")
+    endfor
+    let text = substitute(iconv(self._read(), s:TENC, &enc), "'", '', 'g')
+    let answers = map(split(text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
+    if len(answers) == 0 | return | endif
+    echo '[STANDARD INFORMATION]'
+    try
+      echo '  posiotion: ' s:to_timestr(answers[1]) '/' s:to_timestr(answers[0]) ' (' . answers[2] . '%)'
+      echo '  filename:  ' answers[3]
+      echo '[META DATA]'
+      echo '  title:     ' answers[4]
+      echo '  artist:    ' answers[5]
+      echo '  album:     ' answers[6]
+      echo '  year:      ' answers[7]
+      echo '  comment:   ' answers[8]
+      echo '  track:     ' answers[9]
+      echo '  genre:     ' answers[10]
+      echo '[AUDIO]'
+      echo '  codec:     ' answers[11]
+      echo '  bitrate:   ' answers[12]
+      echo '  sample:    ' answers[13]
+      if answers[14] !=# '' && answers[15] !=# '' && answers[16] !=# ''
+        echo '[VIDEO]'
+        echo '  codec:     ' answers[14]
+        echo '  bitrate:   ' answers[15]
+        echo '  resolution:' answers[16]
+      endif
+    catch /^Vim\%((\a\+)\)\=:E684: /
+      echon ' '
+      echohl ErrorMsg
+      echon '... Failed to get file information'
+      echohl None
+    endtry
+  endfunction
+
+  function! s:MPlayer.show_timeinfo() abort
+    call ch_sendraw(self.handle, s:DUMMY_COMMAND . "\n")
+    call ch_sendraw(self.handle, "get_time_pos\n")
+    call ch_sendraw(self.handle, "get_time_length\n")
+    call ch_sendraw(self.handle, "get_percent_pos\n")
+    let text = substitute(self._read(), "'", '', 'g')
+    let answers = map(split(text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
+    if len(answers) == 3
+      echo '[MPlayer] position:' s:to_timestr(answers[1]) '/' s:to_timestr(answers[0]) ' (' . answers[2] . '%)'
+    endif
+  endfunction
+else
+  function! mplayer#new() abort
+    let mplayer = deepcopy(s:MPlayer)
+    let mplayer.mplayer = g:mplayer#mplayer
+    let mplayer.option = g:mplayer#option
+    let mplayer.handle = 'mplayer-' . s:instance_id
+    let mplayer.id = s:instance_id
+    let s:instance_id += 1
+    call add(s:mplayer_list, mplayer)
+
+    let group = 'MPlayer' . mplayer.id
+    execute 'augroup' group
+    execute '  autocmd!'
+    execute '  autocmd' group 'VimLeave * call s:mplayer_list[' . mplayer.id . '].stop()'
+    execute 'augroup END'
+    return mplayer
+  endfunction
+
+  function! s:MPlayer.start(custom_option) abort
+    if !executable(self.mplayer)
+      echoerr 'Error: Please install mplayer.'
+      return
+    endif
+    if !s:PM.is_available()
+      echoerr 'Error: vimproc is unavailable.'
+      return
+    endif
+    call self.stop()
+    call s:PM.touch(
+          \ self.handle, self.mplayer . ' '
+          \ . self.option . ' '
+          \ . a:custom_option
+          \)
+    call self._read()
+  endfunction
+
+  function! s:MPlayer.enqueue(...) abort
+    if !self.is_playing()
+      call s:PM.touch(self.handle, self.mplayer . ' ' . self.option)
+      call self._read()
+    endif
+    for cmd in s:make_loadcmds(s:List.flatten(a:000))
+      call s:PM.writeln(self.handle, s:DUMMY_COMMAND)
+      call s:PM.writeln(self.handle, cmd)
+    endfor
+    call self._read(s:WAIT_TIME)
+  endfunction
+
+  function! s:MPlayer.stop() abort
+    if !self.is_playing() | return | endif
+    call self.stop_rt_info()
+    call s:PM.kill(self.handle)
+  endfunction
+
+  function! s:MPlayer.is_playing() abort
+    let status = 'dead'
+    try
+      let status = s:PM.status(self.handle)
+    catch
+    endtry
+    return status ==# 'inactive' || status ==# 'active'
+  endfunction
+
+  function! s:MPlayer._command(cmd) abort
+    if !self.is_playing() | return | endif
+    call s:PM.writeln(self.handle, s:DUMMY_COMMAND)
+    call s:PM.writeln(self.handle, a:cmd)
+    return self._read()
+  endfunction
+
+  function! s:MPlayer._read(...) abort
+    let wait_time = get(a:, 1, 0.05)
+    let pattern = get(a:, 2, [])
+    let raw_text = s:PM.read_wait(self.handle, wait_time, [])[0]
+    return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
+  endfunction
+
+  function! s:MPlayer.flush() abort
+    if !self.is_playing() | return | endif
+    let r = s:PM.read(self.handle, [])
+    if r[0] !=# ''
+      echo '[stdout]'
+      echo r[0]
+    endif
+    if r[1] !=# ''
+      echo '[stderr]'
+      echo r[1]
+    endif
+  endfunction
+endif
+
 
 function! s:MPlayer.play(...) abort
   let pos = match(a:000, '^--$')
@@ -121,33 +303,6 @@ function! s:MPlayer.play(...) abort
   call self.start(custom_option)
   let filelist = a:000[: pos - 1]
   call self.enqueue(filelist)
-endfunction
-
-function! s:MPlayer.enqueue(...) abort
-  if !self.is_playing()
-    call s:PM.touch(self.handle, self.mplayer . ' ' . self.option)
-    call self._read()
-  endif
-  for cmd in s:make_loadcmds(s:List.flatten(a:000))
-    call s:PM.writeln(self.handle, s:DUMMY_COMMAND)
-    call s:PM.writeln(self.handle, cmd)
-  endfor
-  call self._read(s:WAIT_TIME)
-endfunction
-
-function! s:MPlayer.stop() abort
-  if !self.is_playing() | return | endif
-  call self.stop_rt_info()
-  call s:PM.kill(self.handle)
-endfunction
-
-function! s:MPlayer.is_playing() abort
-  let status = 'dead'
-  try
-    let status = s:PM.status(self.handle)
-  catch
-  endtry
-  return status ==# 'inactive' || status ==# 'active'
 endfunction
 
 function! s:MPlayer.next(...) abort
@@ -170,33 +325,6 @@ function! s:MPlayer.command(cmd, ...) abort
     let str = iconv(str, s:TENC, &enc)
   endif
   echo matchstr(substitute(str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\zs.*$')
-endfunction
-
-function! s:MPlayer._command(cmd) abort
-  if !self.is_playing() | return | endif
-  call s:PM.writeln(self.handle, s:DUMMY_COMMAND)
-  call s:PM.writeln(self.handle, a:cmd)
-  return self._read()
-endfunction
-
-function! s:MPlayer._read(...) abort
-  let wait_time = get(a:, 1, 0.05)
-  let pattern = get(a:, 2, [])
-  let raw_text = s:PM.read_wait(self.handle, wait_time, [])[0]
-  return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
-endfunction
-
-function! s:MPlayer.flush() abort
-  if !self.is_playing() | return | endif
-  let r = s:PM.read(self.handle, [])
-  if r[0] !=# ''
-    echo '[stdout]'
-    echo r[0]
-  endif
-  if r[1] !=# ''
-    echo '[stderr]'
-    echo r[1]
-  endif
 endfunction
 
 function! s:MPlayer.set_seek(pos) abort
@@ -225,72 +353,6 @@ function! s:MPlayer.set_equalizer(band_str) abort
     call self._command('af_eq_set_bands ' . s:eq_presets[a:band_str])
   else
     call self._command('af_eq_set_bands ' . a:band_str)
-  endif
-endfunction
-
-function! s:MPlayer.operate_with_key() abort
-  if !self.is_playing() | return | endif
-  let key = getchar()
-  while key != s:EXIT_KEYCODE
-    if type(key) == 0
-      call s:PM.writeln(self.handle, 'key_down_event ' . key)
-    elseif has_key(s:KEY_ACTION_DICT, key)
-      call s:PM.writeln(self.handle, s:KEY_ACTION_DICT[key])
-    endif
-    let key = getchar()
-  endwhile
-  call s:PM.writeln(self.handle, s:DUMMY_COMMAND)
-  call self._read(s:WAIT_TIME)
-endfunction
-
-function! s:MPlayer.show_file_info() abort
-  if !self.is_playing() | return | endif
-  call s:PM.writeln(self.handle, s:DUMMY_COMMAND)
-  for cmd in s:INFO_COMMANDS
-    call s:PM.writeln(self.handle, cmd)
-  endfor
-  let text = substitute(iconv(self._read(), s:TENC, &enc), "'", '', 'g')
-  let answers = map(split(text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
-  if len(answers) == 0 | return | endif
-  echo '[STANDARD INFORMATION]'
-  try
-    echo '  posiotion: ' s:to_timestr(answers[1]) '/' s:to_timestr(answers[0]) ' (' . answers[2] . '%)'
-    echo '  filename:  ' answers[3]
-    echo '[META DATA]'
-    echo '  title:     ' answers[4]
-    echo '  artist:    ' answers[5]
-    echo '  album:     ' answers[6]
-    echo '  year:      ' answers[7]
-    echo '  comment:   ' answers[8]
-    echo '  track:     ' answers[9]
-    echo '  genre:     ' answers[10]
-    echo '[AUDIO]'
-    echo '  codec:     ' answers[11]
-    echo '  bitrate:   ' answers[12]
-    echo '  sample:    ' answers[13]
-    if answers[14] !=# '' && answers[15] !=# '' && answers[16] !=# ''
-      echo '[VIDEO]'
-      echo '  codec:     ' answers[14]
-      echo '  bitrate:   ' answers[15]
-      echo '  resolution:' answers[16]
-    endif
-  catch /^Vim\%((\a\+)\)\=:E684: /
-    echon ' '
-    echohl ErrorMsg
-    echon '... Failed to get file information'
-    echohl None
-  endtry
-endfunction
-
-function! s:MPlayer.show_timeinfo() abort
-  call s:PM.writeln(self.handle, s:DUMMY_COMMAND)
-  call s:PM.writeln(self.handle, 'get_time_pos')
-  call s:PM.writeln(self.handle, 'get_time_length')
-  call s:PM.writeln(self.handle, 'get_percent_pos')
-  let text = substitute(self._read(), "'", '', 'g')
-  let answers = map(split(text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
-  if len(answers) == 3
-    echo '[MPlayer] position:' s:to_timestr(answers[1]) '/' s:to_timestr(answers[0]) ' (' . answers[2] . '%)'
   endif
 endfunction
 
