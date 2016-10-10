@@ -23,6 +23,7 @@ else
 endif
 let g:mplayer#suffixes = get(g:, 'mplayer#suffixes', ['*'])
 let g:mplayer#_use_job = get(g:, 'mplayer#_use_job', has('job'))
+let g:mplayer#_use_timer = get(g:, 'mplayer#_use_timer', has('timers'))
 
 let g:mplayer#enable_ctrlp_multi_select = get(g:, 'mplayer#enable_ctrlp_multi_select', 1)
 
@@ -370,6 +371,7 @@ function! s:MPlayer.help(...) abort
   endif
 endfunction
 
+
 function! s:MPlayer.toggle_rt_timeinfo() abort
   if self.rt_sw
     call self.stop_rt_info()
@@ -379,20 +381,37 @@ function! s:MPlayer.toggle_rt_timeinfo() abort
   let self.rt_sw = !self.rt_sw
 endfunction
 
-function! s:MPlayer.start_rt_info() abort
-  if !self.is_playing() | return | endif
-  execute 'autocmd! MPlayer' . self.id 'CursorHold,CursorHoldI * call s:mplayer_list[' . self.id . '].update()'
-endfunction
+if g:mplayer#_use_timer
+  let s:timer_dict = {}
 
-function! s:MPlayer.stop_rt_info() abort
-  execute 'autocmd! MPlayer' . self.id 'CursorHold,CursorHoldI'
-endfunction
+  function! s:MPlayer.start_rt_info() abort
+    if !self.is_playing() | return | endif
+    let self.timer_id = timer_start(&updatetime, function('s:timer_update'), {'repeat': -1})
+    let s:timer_dict[self.timer_id] = self
+  endfunction
 
-function! s:MPlayer.update() abort
-  call self.show_timeinfo()
-  call feedkeys(mode() ==# 'i' ? "\<C-g>\<ESC>" : "g\<ESC>", 'n')
-endfunction
+  function! s:MPlayer.stop_rt_info() abort
+    call timer_stop(self.timer_id)
+  endfunction
 
+  function! s:timer_update(timer_id) abort
+    call s:timer_dict[a:timer_id].show_timeinfo()
+  endfunction
+else
+  function! s:MPlayer.start_rt_info() abort
+    if !self.is_playing() | return | endif
+    execute 'autocmd! MPlayer' . self.id 'CursorHold,CursorHoldI * call s:mplayer_list[' . self.id . '].update()'
+  endfunction
+
+  function! s:MPlayer.stop_rt_info() abort
+    execute 'autocmd! MPlayer' . self.id 'CursorHold,CursorHoldI'
+  endfunction
+
+  function! s:MPlayer.update() abort
+    call self.show_timeinfo()
+    call feedkeys(mode() ==# 'i' ? "\<C-g>\<ESC>" : "g\<ESC>", 'n')
+  endfunction
+endif
 
 function! s:make_loadcmds(args) abort
   let loadcmds = []
