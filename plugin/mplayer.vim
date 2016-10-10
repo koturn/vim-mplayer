@@ -13,41 +13,35 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
-command! -bar -nargs=+ -complete=file MPlayer call mplayer#play(<f-args>)
-command! -bar -nargs=+ -complete=file MPlayerEnqueue call mplayer#enqueue(<f-args>)
-command! -bar -nargs=0 MPlayerStop call mplayer#stop()
-command! -bar -nargs=1 MPlayerVolume call mplayer#command('volume ' . <q-args> . ' 1')
-command! -bar -nargs=1 -bang MPlayerSpeed call mplayer#set_speed(<f-args>, <bang>1)
-command! -bar -nargs=1 -complete=customlist,mplayer#equlizer_complete MPlayerEqualizer call mplayer#set_equalizer(<f-args>)
-command! -bar -nargs=0 MPlayerToggleMute call mplayer#command('mute')
-command! -bar -nargs=0 MPlayerTogglePause call mplayer#command('pause')
-command! -bar -nargs=0 MPlayerToggleRTTimeInfo call mplayer#toggle_rt_timeinfo()
-command! -bar -nargs=1 MPlayerLoop call mplayer#command('loop ' . <q-args> . ' 1')
-command! -bar -nargs=1 MPlayerSeek call mplayer#set_seek(<f-args>)
-command! -bar -nargs=0 MPlayerSeekToHead call mplayer#command('seek 0 1')
-command! -bar -nargs=0 MPlayerSeekToEnd call mplayer#command('seek 100 1')
-command! -bar -nargs=0 MPlayerOperateWithKey call mplayer#operate_with_key()
-command! -bar -nargs=? MPlayerPrev call mplayer#prev(<f-args>)
-command! -bar -nargs=? MPlayerNext call mplayer#next(<f-args>)
-command! -bar -nargs=0 MPlayerShowFileInfo call mplayer#show_file_info()
-command! -bar -nargs=+ -complete=customlist,mplayer#cmd_complete MPlayerCommand call mplayer#command(<q-args>, 1)
-command! -bar -nargs=1 -complete=customlist,mplayer#get_property_complete MPlayerGetProperty call mplayer#command('get_property ' . <q-args>, 1)
-command! -bar -nargs=+ -complete=customlist,mplayer#set_property_complete MPlayerSetProperty call mplayer#command('set_property ' . <q-args>, 1)
-command! -bar -nargs=+ -complete=customlist,mplayer#step_property_complete MPlayerStepProperty call mplayer#command('step_property ' . <q-args>, 1)
-command! -bar -nargs=? -complete=customlist,mplayer#help_complete  MPlayerHelp call mplayer#help(<f-args>)
+command! -bar -nargs=+ -complete=file MPlayer call mplayer#cmd#play(<f-args>)
+command! -bar -nargs=+ -complete=file MPlayerEnqueue call mplayer#cmd#enqueue(<f-args>)
+command! -bar -nargs=0 MPlayerStop call mplayer#cmd#stop()
+command! -bar -nargs=1 MPlayerVolume call mplayer#cmd#command('volume ' . <q-args> . ' 1')
+command! -bar -nargs=1 -bang MPlayerSpeed call mplayer#cmd#set_speed(<f-args>, <bang>1)
+command! -bar -nargs=1 -complete=customlist,mplayer#cmd#equlizer_complete MPlayerEqualizer call mplayer#cmd#set_equalizer(<f-args>)
+command! -bar -nargs=0 MPlayerToggleMute call mplayer#cmd#command('mute')
+command! -bar -nargs=0 MPlayerTogglePause call mplayer#cmd#command('pause')
+command! -bar -nargs=0 MPlayerToggleRTTimeInfo call mplayer#cmd#toggle_rt_timeinfo()
+command! -bar -nargs=1 MPlayerLoop call mplayer#cmd#command('loop ' . <q-args> . ' 1')
+command! -bar -nargs=1 MPlayerSeek call mplayer#cmd#set_seek(<f-args>)
+command! -bar -nargs=0 MPlayerSeekToHead call mplayer#cmd#command('seek 0 1')
+command! -bar -nargs=0 MPlayerSeekToEnd call mplayer#cmd#command('seek 100 1')
+command! -bar -nargs=0 MPlayerOperateWithKey call mplayer#cmd#operate_with_key()
+command! -bar -nargs=? MPlayerPrev call mplayer#cmd#prev(<f-args>)
+command! -bar -nargs=? MPlayerNext call mplayer#cmd#next(<f-args>)
+command! -bar -nargs=0 MPlayerShowFileInfo call mplayer#cmd#show_file_info()
+command! -bar -nargs=+ -complete=customlist,mplayer#cmd_complete MPlayerCommand call mplayer#cmd#command(<q-args>, 1)
+command! -bar -nargs=1 -complete=customlist,mplayer#get_property_complete MPlayerGetProperty call mplayer#cmd#command('get_property ' . <q-args>, 1)
+command! -bar -nargs=+ -complete=customlist,mplayer#set_property_complete MPlayerSetProperty call mplayer#cmd#command('set_property ' . <q-args>, 1)
+command! -bar -nargs=+ -complete=customlist,mplayer#step_property_complete MPlayerStepProperty call mplayer#cmd#command('step_property ' . <q-args>, 1)
+command! -bar -nargs=? -complete=customlist,mplayer#help_complete  MPlayerHelp call mplayer#cmd#help(<f-args>)
 
-command! -bar -nargs=0 MPlayerFlush call mplayer#flush()
+command! -bar -nargs=0 MPlayerFlush call mplayer#cmd#flush()
 
 command! -nargs=? -complete=dir CtrlPMPlayer  call ctrlp#mplayer#start(<f-args>)
 command! -nargs=? -complete=dir AltiMPlayer  call alti#mplayer#start(<f-args>)
 command! -nargs=? -complete=dir MilqiMPlayer  call milqi#mplayer#start(<f-args>)
 command! -nargs=? -complete=dir FZFMPlayer  call fzf#mplayer#start(<f-args>)
-
-
-augroup MPlayer
-  autocmd!
-  autocmd VimLeave * call mplayer#stop()
-augroup END
 
 
 let &cpo = s:save_cpo
