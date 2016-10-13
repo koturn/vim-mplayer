@@ -154,16 +154,29 @@ endfunction
 
 
 if g:mplayer#_use_job
-  function! s:show_timeinfo() abort
-    call ch_sendraw(s:mplayer.handle, join([
-          \ s:DUMMY_COMMAND, 'get_time_pos', 'get_time_length', 'get_percent_pos'
-          \], "\n") . "\n")
-    let text = substitute(s:mplayer._read(), "'", '', 'g')
-    let answers = map(split(text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
-    if len(answers) == 3
-      echo '[MPlayer] position:' s:to_timestr(answers[1]) '/' s:to_timestr(answers[0]) ' (' . answers[2] . '%)'
-    endif
-  endfunction
+  if has('job')
+    function! s:show_timeinfo() abort
+      call ch_sendraw(s:mplayer.handle, join([
+            \ s:DUMMY_COMMAND, 'get_time_pos', 'get_time_length', 'get_percent_pos'
+            \], "\n") . "\n")
+      let text = substitute(s:mplayer._read(), "'", '', 'g')
+      let answers = map(split(text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
+      if len(answers) == 3
+        echo '[MPlayer] position:' s:to_timestr(answers[1]) '/' s:to_timestr(answers[0]) ' (' . answers[2] . '%)'
+      endif
+    endfunction
+  elseif has('nvim')
+    function! s:show_timeinfo() abort
+      call jobsend(s:mplayer.handle, join([
+            \ s:DUMMY_COMMAND, 'get_time_pos', 'get_time_length', 'get_percent_pos'
+            \], "\n") . "\n")
+      let text = substitute(s:mplayer._read(), "'", '', 'g')
+      let answers = map(split(text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
+      if len(answers) == 3
+        echo '[MPlayer] position:' s:to_timestr(answers[1]) '/' s:to_timestr(answers[0]) ' (' . answers[2] . '%)'
+      endif
+    endfunction
+  endif
 else
   function! s:show_timeinfo() abort
     call s:PM.writeln(s:mplayer.handle, join([
