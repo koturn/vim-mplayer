@@ -143,12 +143,12 @@ function! mplayer#cmd#help(...) abort
 endfunction
 
 function! mplayer#cmd#flush() abort
-  let r = s:mplayer.flush()
-  if r[0] !=# ''
-    echon "[stdout]\n" r[0]
+  let [stdout, stderr] = s:mplayer.flush()
+  if stdout !=# ''
+    echon "[stdout]\n" stdout
   endif
-  if r[1] !=# ''
-    echon "[stderr]\n" r[1]
+  if stderr !=# ''
+    echon "[stderr]\n" stderr
   endif
 endfunction
 
