@@ -231,9 +231,6 @@ if g:mplayer#_use_job
     endfunction
 
     function! s:MPlayer.is_playing() abort
-      if !has_key(self, 'handle')
-        return 0
-      endif
       try
         call jobpid(self.handle)
         return 1
@@ -264,8 +261,7 @@ if g:mplayer#_use_job
     function! s:MPlayer.flush() abort
       if !self.is_playing() | return | endif
       let r = [self.jobopt.stdout, self.jobopt.stderr]
-      let self.jobopt.stdout = ''
-      let self.jobopt.stderr = ''
+      let [self.jobopt.stdout, self.jobopt.stderr] = ['', '']
       return r
     endfunction
 
