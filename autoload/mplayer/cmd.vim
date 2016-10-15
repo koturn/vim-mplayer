@@ -21,11 +21,11 @@ let s:rt_sw = 0
 
 
 function! mplayer#cmd#play(...) abort
-  call s:mplayer.play(a:000)
+  call call(s:mplayer.play, a:000, s:mplayer)
 endfunction
 
 function! mplayer#cmd#enqueue(...) abort
-  call s:mplayer.enqueue(a:000)
+  call call(s:mplayer.enqueue, a:000, s:mplayer)
 endfunction
 
 function! mplayer#cmd#stop() abort
@@ -33,11 +33,11 @@ function! mplayer#cmd#stop() abort
 endfunction
 
 function! mplayer#cmd#prev(...) abort
-  echo s:mplayer.prev(a:000)
+  call call(s:mplayer.prev, a:000, s:mplayer)
 endfunction
 
 function! mplayer#cmd#next(...) abort
-  echo s:mplayer.next(a:000)
+  call call(s:mplayer.next, a:000, s:mplayer)
 endfunction
 
 function! mplayer#cmd#command(cmd) abort

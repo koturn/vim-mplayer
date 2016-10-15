@@ -163,15 +163,9 @@ if g:mplayer#_use_job
       let self.stderr .= join(a:data, "\n")
     endfunction
 
-    function! s:on_exit(id, data, e) abort dict
-      let self.is_stopped = 1
-    endfunction
-
     function! mplayer#new() abort
       let mplayer = deepcopy(s:MPlayer)
-      let mplayer.jobopt = {
-            \ 'is_stopped': 1
-            \}
+      let mplayer.jobopt = {}
       let mplayer.id = s:instance_id
       let s:instance_id += 1
       call add(s:mplayer_list, mplayer)
@@ -292,7 +286,7 @@ else
     if !self.is_playing()
       call self.start('')
     endif
-    call s:PM.writeln(self.handle, join(extend(s:make_loadcmds(s:List.flatten(a:000)), [s:DUMMY_COMMAND, '']), "\n"))
+    call s:PM.writeln(self.handle, join(add(s:make_loadcmds(s:List.flatten(a:000)), s:DUMMY_COMMAND), "\n"))
     call self._read(s:WAIT_TIME)
   endfunction
 
@@ -312,7 +306,7 @@ else
 
   function! s:MPlayer._command(cmd) abort
     if !self.is_playing() | return | endif
-    call s:PM.writeln(self.handle, join([s:DUMMY_COMMAND, a:cmd, ''], "\n"))
+    call s:PM.writeln(self.handle, join([s:DUMMY_COMMAND, a:cmd], "\n"))
     return self._read()
   endfunction
 
