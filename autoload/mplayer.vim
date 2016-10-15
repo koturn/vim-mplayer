@@ -113,10 +113,7 @@ if g:mplayer#_use_job
       if !self.is_playing()
         call self.start('')
       endif
-      for cmd in s:make_loadcmds(s:List.flatten(a:000))
-        call ch_sendraw(self.handle, s:DUMMY_COMMAND . "\n")
-        call ch_sendraw(self.handle, cmd . "\n")
-      endfor
+      call ch_sendraw(self.handle, join(extend(s:make_loadcmds(s:List.flatten(a:000)), [s:DUMMY_COMMAND, '']), "\n"))
       call self._read(s:WAIT_TIME)
     endfunction
 
@@ -131,8 +128,7 @@ if g:mplayer#_use_job
 
     function! s:MPlayer._command(cmd) abort
       if !self.is_playing() | return | endif
-      call ch_sendraw(self.handle, s:DUMMY_COMMAND . "\n")
-      call ch_sendraw(self.handle, a:cmd . "\n")
+      call ch_sendraw(self.handle, join([s:DUMMY_COMMAND, a:cmd, ''], "\n"))
       return self._read()
     endfunction
 
@@ -209,10 +205,7 @@ if g:mplayer#_use_job
       if !self.is_playing()
         call self.start('')
       endif
-      for cmd in s:make_loadcmds(s:List.flatten(a:000))
-        call jobsend(self.handle, s:DUMMY_COMMAND . "\n")
-        call jobsend(self.handle, cmd . "\n")
-      endfor
+      call jobsend(self.handle, join(extend(s:make_loadcmds(s:List.flatten(a:000)), [s:DUMMY_COMMAND, '']), "\n"))
       call self._read(s:WAIT_TIME)
     endfunction
 
@@ -233,8 +226,7 @@ if g:mplayer#_use_job
 
     function! s:MPlayer._command(cmd) abort
       if !self.is_playing() | return | endif
-      call jobsend(self.handle, s:DUMMY_COMMAND . "\n")
-      call jobsend(self.handle, a:cmd . "\n")
+      call jobsend(self.handle, join([s:DUMMY_COMMAND, a:cmd, ''], "\n"))
       return self._read()
     endfunction
 
@@ -300,10 +292,7 @@ else
     if !self.is_playing()
       call self.start('')
     endif
-    for cmd in s:make_loadcmds(s:List.flatten(a:000))
-      call s:PM.writeln(self.handle, s:DUMMY_COMMAND)
-      call s:PM.writeln(self.handle, cmd)
-    endfor
+    call s:PM.writeln(self.handle, join(extend(s:make_loadcmds(s:List.flatten(a:000)), [s:DUMMY_COMMAND, '']), "\n"))
     call self._read(s:WAIT_TIME)
   endfunction
 
@@ -323,8 +312,7 @@ else
 
   function! s:MPlayer._command(cmd) abort
     if !self.is_playing() | return | endif
-    call s:PM.writeln(self.handle, s:DUMMY_COMMAND)
-    call s:PM.writeln(self.handle, a:cmd)
+    call s:PM.writeln(self.handle, join([s:DUMMY_COMMAND, a:cmd, ''], "\n"))
     return self._read()
   endfunction
 
