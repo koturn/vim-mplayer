@@ -16,4 +16,4 @@ class Kind(Base):
         self.name = 'mplayer'
 
     def action_default(self, context):
-        self.vim.call('vim#mplayer#cmd#enqueue', list(map(lambda e: e['action__path'], context['targets'])))
+        self.vim.call('mplayer#cmd#enqueue', list(map(lambda e: e['action__path'], context['targets'])))
