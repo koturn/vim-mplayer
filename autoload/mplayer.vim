@@ -111,7 +111,7 @@ if g:mplayer#_use_job
 
     function! s:MPlayer.enqueue(...) abort
       if !self.is_playing()
-        call self.start()
+        call self.start('')
       endif
       for cmd in s:make_loadcmds(s:List.flatten(a:000))
         call ch_sendraw(self.handle, s:DUMMY_COMMAND . "\n")
@@ -137,7 +137,7 @@ if g:mplayer#_use_job
     endfunction
 
     function! s:MPlayer._read(...) abort
-      let wait_time = get(a:, 1, 50)
+      let wait_time = get(a:, 1, s:WAIT_TIME)
       let pattern = get(a:, 2, [])
       let raw_text = ch_readraw(self.handle, {'timeout': wait_time})
       return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
@@ -207,7 +207,7 @@ if g:mplayer#_use_job
 
     function! s:MPlayer.enqueue(...) abort
       if !self.is_playing()
-        call self.start()
+        call self.start('')
       endif
       for cmd in s:make_loadcmds(s:List.flatten(a:000))
         call jobsend(self.handle, s:DUMMY_COMMAND . "\n")
@@ -298,7 +298,7 @@ else
 
   function! s:MPlayer.enqueue(...) abort
     if !self.is_playing()
-      call self.start()
+      call self.start('')
     endif
     for cmd in s:make_loadcmds(s:List.flatten(a:000))
       call s:PM.writeln(self.handle, s:DUMMY_COMMAND)
@@ -329,7 +329,7 @@ else
   endfunction
 
   function! s:MPlayer._read(...) abort
-    let wait_time = get(a:, 1, 0.05)
+    let wait_time = get(a:, 1, s:WAIT_TIME)
     let pattern = get(a:, 2, [])
     let raw_text = s:PM.read_wait(self.handle, wait_time, [])[0]
     return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
