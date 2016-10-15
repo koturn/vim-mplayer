@@ -366,14 +366,14 @@ endfunction
 
 function! s:MPlayer.next(...) abort
   let n = get(a:, 1, 1)
-  let text iconv(self._command('pt_step ' . n), s:TENC, &enc)
+  let text = iconv(self._command('pt_step ' . n), s:TENC, &enc)
   call self._read()
   return text
 endfunction
 
 function! s:MPlayer.prev(...) abort
   let n = -get(a:, 1, 1)
-  let text iconv(self._command('pt_step ' . n), s:TENC, &enc)
+  let text = iconv(self._command('pt_step ' . n), s:TENC, &enc)
   call self._read()
   return text
 endfunction
