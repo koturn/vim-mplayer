@@ -111,9 +111,7 @@ if g:mplayer#_use_job
 
     function! s:MPlayer.enqueue(...) abort
       if !self.is_playing()
-        let self.handle = job_start(self.mplayer . ' ' . self.option, {
-              \ 'out_mode': 'raw'
-              \})
+        call self.start()
       endif
       for cmd in s:make_loadcmds(s:List.flatten(a:000))
         call ch_sendraw(self.handle, s:DUMMY_COMMAND . "\n")
@@ -209,13 +207,7 @@ if g:mplayer#_use_job
 
     function! s:MPlayer.enqueue(...) abort
       if !self.is_playing()
-        let self.jobopt = {
-              \ 'stdout': '',
-              \ 'stderr': '',
-              \ 'on_stdout': function('s:on_stdout'),
-              \ 'on_stderr': function('s:on_stderr')
-              \}
-        let self.handle = jobstart(self.mplayer . ' ' . self.option, self.jobopt)
+        call self.start()
       endif
       for cmd in s:make_loadcmds(s:List.flatten(a:000))
         call jobsend(self.handle, s:DUMMY_COMMAND . "\n")
@@ -306,8 +298,7 @@ else
 
   function! s:MPlayer.enqueue(...) abort
     if !self.is_playing()
-      call s:PM.touch(self.handle, self.mplayer . ' ' . self.option)
-      call self._read()
+      call self.start()
     endif
     for cmd in s:make_loadcmds(s:List.flatten(a:000))
       call s:PM.writeln(self.handle, s:DUMMY_COMMAND)
