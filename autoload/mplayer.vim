@@ -195,6 +195,7 @@ else
       return
     endif
     call self.stop()
+    let self.handle = 'mplayer-' . self.id
     call s:PM.touch(self.handle, join([self.mplayer, self.option, a:custom_option]))
     call self._read()
   endfunction
