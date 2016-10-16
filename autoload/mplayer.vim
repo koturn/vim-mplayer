@@ -28,7 +28,7 @@ let g:mplayer#_use_timer = get(g:, 'mplayer#_use_timer', has('timers'))
 
 let g:mplayer#enable_ctrlp_multi_select = get(g:, 'mplayer#enable_ctrlp_multi_select', 1)
 
-let s:V = vital#of('mplayer')
+let s:V = vital#mplayer#new()
 let s:List = s:V.import('Data.List')
 let s:PM = s:V.import('ProcessManager')
 

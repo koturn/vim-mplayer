@@ -9,7 +9,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
-let s:V = vital#of('mplayer')
+let s:V = vital#mplayer#new()
 let s:P = s:V.import('Process')
 let s:PM = s:V.import('ProcessManager')
 let s:DUMMY_COMMAND = mplayer#_import_local_var('DUMMY_COMMAND')

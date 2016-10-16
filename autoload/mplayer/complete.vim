@@ -8,7 +8,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:P = vital#of('mplayer').import('Process')
+let s:P = vital#mplayer#new().import('Process')
 
 let s:eq_presets = {
       \ 'acoustic': '0:1:2:0:0:0:0:0:2:2',
