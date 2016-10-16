@@ -13,6 +13,10 @@ let g:loaded_ctrlp_mplayer = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
+augroup MPlayerCtrlP
+  autocmd!
+augroup END
+
 let s:ctrlp_builtins = ctrlp#getvar('g:ctrlp_builtins')
 
 function! s:get_sid_prefix() abort
@@ -48,8 +52,8 @@ endfunction
 function! s:init() abort
   let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
   if g:mplayer#enable_ctrlp_multi_select
-    autocmd! MPlayer BufReadCmd
-    execute 'autocmd MPlayer BufReadCmd' glob_pattern 'call s:enqueue_hook()'
+    autocmd! MPlayerCtrlP BufReadCmd
+    execute 'autocmd MPlayerCtrlP BufReadCmd' glob_pattern 'call s:enqueue_hook()'
   endif
   let len = len(s:dir)
   return map(split(globpath(s:dir . '**', glob_pattern, 1), "\n"), 'v:val[len :]')
@@ -62,7 +66,7 @@ endfunction
 
 function! s:exit() abort
   if g:mplayer#enable_ctrlp_multi_select
-    autocmd MPlayer CursorHold,CursorHoldI,CursorMoved,CursorMovedI,InsertEnter * call s:delete_autocmds_hook()
+    autocmd MPlayerCtrlP CursorHold,CursorHoldI,CursorMoved,CursorMovedI,InsertEnter * call s:delete_autocmds_hook()
   endif
 endfunction
 
@@ -73,8 +77,8 @@ function! s:enqueue_hook() abort
 endfunction
 
 function! s:delete_autocmds_hook() abort
-  autocmd! MPlayer CursorHold,CursorHoldI,CursorMoved,CursorMovedI,InsertEnter *
-  autocmd! MPlayer BufReadCmd
+  autocmd! MPlayerCtrlP CursorHold,CursorHoldI,CursorMoved,CursorMovedI,InsertEnter *
+  autocmd! MPlayerCtrlP BufReadCmd
 endfunction
 
 
