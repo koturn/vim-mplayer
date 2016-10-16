@@ -3,7 +3,8 @@ FILE: mplayer.vim
 AUTHOR: koturn <jeak.koutan.apple@gmail.com>
 DESCRIPTION: {{{
 Mplayer frontend of Vim.
-denite.nvim: https://github.com/Shougo/
+This file is a extension for unite.vim and provides denite-source.
+denite.nvim: https://github.com/Shougo/denite.nvim
 }}}
 """
 

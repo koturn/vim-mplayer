@@ -2,7 +2,8 @@
 " FILE: mplayer.vim
 " AUTHOR: koturn <jeak.koutan.apple@gmail.com>
 " DESCRIPTION: {{{
-" descriptions.
+" A mplayer frontend for Vim.
+" This file is a extension for unite.vim and provides unite-source.
 " unite.vim: https://github.com/Shougo/unite.vim
 " }}}
 " ============================================================================

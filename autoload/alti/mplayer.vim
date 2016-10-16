@@ -2,7 +2,8 @@
 " FILE: mplayer.vim
 " AUTHOR: koturn <jeak.koutan.apple@gmail.com>
 " DESCRIPTION: {{{
-" Extension for alti.vim
+" A mplayer frontend for Vim.
+" This file is a extension for alti.vim.
 " alti.vim: https://github.com/LeafCage/alti.vim
 " }}}
 " ============================================================================

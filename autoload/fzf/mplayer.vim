@@ -1,9 +1,9 @@
 " ============================================================================
 " FILE: mplayer.vim
 " AUTHOR: koturn <jeak.koutan.apple@gmail.com>
-" Last Modified: 2015 11/03
 " DESCRIPTION: {{{
-" descriptions.
+" A mplayer frontend for Vim.
+" This file is a extension for fzf.
 " fzf: https://github.com/junegunn/fzf
 " }}}
 " ============================================================================

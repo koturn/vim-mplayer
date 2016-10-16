@@ -1,9 +1,9 @@
 " ============================================================================
 " FILE: mplayer.vim
 " AUTHOR: koturn <jeak.koutan.apple@gmail.com>
-" Last Modified: 2015 10/27
 " DESCRIPTION: {{{
-" descriptions.
+" A mplayer frontend for Vim.
+" This file is a extension for vim-milqi.
 " milqi.vim: https://github.com/kamichidu/vim-milqi
 " }}}
 " ============================================================================

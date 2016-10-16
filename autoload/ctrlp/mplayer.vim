@@ -2,7 +2,8 @@
 " FILE: mplayer.vim
 " AUTHOR: koturn <jeak.koutan.apple@gmail.com>
 " DESCRIPTION: {{{
-" descriptions.
+" A mplayer frontend for Vim.
+" This file is a extension for ctrlp.vim.
 " ctrlp.vim: https://github.com/ctrlpvim/ctrlp.vim
 " }}}
 " ============================================================================

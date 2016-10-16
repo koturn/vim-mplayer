@@ -2,7 +2,7 @@
 " FILE: complete.vim
 " AUTHOR: koturn <jeak.koutan.apple@gmail.com>
 " DESCRIPTION: {{{
-" Mplayer frontend of Vim.
+" A mplayer frontend for Vim.
 " }}}
 " ============================================================================
 let s:save_cpo = &cpo

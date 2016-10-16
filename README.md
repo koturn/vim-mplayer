@@ -2,7 +2,7 @@ vim-mplayer
 ===========
 
 [Mplayer](http://www.mplayerhq.hu/design7/news.html) frontend of Vim. You can
-enjoy music on Vim!!
+enjoy music/video on Vim!!
 
 
 ## Usage
@@ -45,9 +45,177 @@ Command                                                  | Description
 ```MPlayerVolume <value>```                              | Set the volume of the mplayer.
 
 
+## Installation
+
+### With [dein.vim](https://github.com/Shougo/neobundle.vim)
+
+```vim
+" Dependent plugins
+" for Vim without +job feature (neovim doesn't need vimproc)
+call dein#add('Shougo/vimproc.vim')
+" Optional plugins
+call dein#add('Shougo/unite.vim')
+call dein#add('Shougo/denite.nvim')
+call dein#add('ctrlpvim/ctrlp.vim')
+call dein#add('junegunn/fzf')
+call dein#add('LeafCage/alti.vim')
+call dein#add('kamichidu/vim-milqi')
+
+call dein#add('koturn/vim-mplayer', {
+      \ 'depends': [
+      \   'vimproc.vim',
+      \   'unite.vim',
+      \   'denite.vim',
+      \   'ctrlp.vim',
+      \   'alti.vim',
+      \   'vim-milqi'
+      \ ],
+      \ 'on_cmd': [
+      \   'AltiMPlayer',
+      \   'CtrlPMPlayer',
+      \   'MilqiMPlayer',
+      \   'FZFMPlayer',
+      \   'MPlayer',
+      \   'MPlayerEnqueue',
+      \   'MPlayerCommand',
+      \   'MPlayerStop',
+      \   'MPlayerVolume',
+      \   'MPlayerVolumeBar',
+      \   'MPlayerSpeed',
+      \   'MPlayerEqualizer',
+      \   'MPlayerToggleMute',
+      \   'MPlayerTogglePause',
+      \   'MPlayerToggleRTTimeInfo',
+      \   'MPlayerLoop',
+      \   'MPlayerSeek',
+      \   'MPlayerSeekToHead',
+      \   'MPlayerSeekToEnd',
+      \   'MPlayerOperateWithKey',
+      \   'MPlayerPrev',
+      \   'MPlayerNext',
+      \   'MPlayerShowFileInfo',
+      \   'MPlayerCommand',
+      \   'MPlayerGetProperty',
+      \   'MPlayerSetProperty',
+      \   'MPlayerStepProperty',
+      \   'MPlayerHelp',
+      \   'MPlayerFlush'
+      \ ],
+      \ 'on_source': ['unite.vim', 'denite.nvim'],
+      \})
+```
+
+### With [NeoBundle](https://github.com/Shougo/neobundle.vim)
+
+```vim
+NeoBundle 'koturn/vim-mplayer'
+```
+
+If you want to use ```:NeoBundleLazy```, write following code in your .vimrc.
+
+```vim
+NeoBundle 'koturn/vim-mplayer', {
+      \ 'depends': [
+      \   'Shougo/vimproc.vim',
+      \   'Shougo/unite.vim',
+      \   'Shougo/denite.vim',
+      \   'ctrlpvim/ctrlp.vim',
+      \   'LeafCage/alti.vim',
+      \   'kamichidu/vim-milqi'
+      \ ],
+      \ 'on_cmd': [
+      \   'AltiMPlayer',
+      \   'CtrlPMPlayer',
+      \   'MilqiMPlayer',
+      \   'FZFMPlayer',
+      \   'MPlayer',
+      \   'MPlayerEnqueue',
+      \   'MPlayerCommand',
+      \   'MPlayerStop',
+      \   'MPlayerVolume',
+      \   'MPlayerVolumeBar',
+      \   'MPlayerSpeed',
+      \   'MPlayerEqualizer',
+      \   'MPlayerToggleMute',
+      \   'MPlayerTogglePause',
+      \   'MPlayerToggleRTTimeInfo',
+      \   'MPlayerLoop',
+      \   'MPlayerSeek',
+      \   'MPlayerSeekToHead',
+      \   'MPlayerSeekToEnd',
+      \   'MPlayerOperateWithKey',
+      \   'MPlayerPrev',
+      \   'MPlayerNext',
+      \   'MPlayerShowFileInfo',
+      \   'MPlayerCommand',
+      \   'MPlayerGetProperty',
+      \   'MPlayerSetProperty',
+      \   'MPlayerStepProperty',
+      \   'MPlayerHelp',
+      \   'MPlayerFlush'
+      \ ],
+      \ 'on_source': ['unite.vim', 'denite.nvim'],
+      \}
+```
+
+### With [Vundle](https://github.com/VundleVim/Vundle.vim)
+
+```vim
+" Dependent plugins
+" for Vim without +job feature (neovim doesn't need vimproc
+Plugin 'Shougo/vimproc.vim'
+" Optional plugins
+Plugin 'Shougo/unite.vim'
+Plugin 'Shougo/denite.nvim'
+Plugin 'ctrlpvim/ctrlp.vim'
+Plugin 'junegunn/fzf'
+Plugin 'LeafCage/alti.vim'
+Plugin 'kamichidu/vim-milqi'
+
+Plugin 'koturn/vim-mplayer'
+```
+
+### With [vim-plug](https://github.com/junegunn/vim-plug)
+
+```vim
+" Dependent plugins
+" for Vim without +job feature (neovim doesn't need vimproc
+Plug 'Shougo/vimproc.vim'
+" Optional plugins
+Plug 'Shougo/unite.vim'
+Plug 'Shougo/denite.nvim'
+Plug 'ctrlpvim/ctrlp.vim'
+Plug 'junegunn/fzf'
+Plug 'LeafCage/alti.vim'
+Plug 'kamichidu/vim-milqi'
+
+Plug 'koturn/vim-mplayer'
+```
+
+### Manual
+
+If you don't want to use plugin manager, put files and directories on
+```~/.vim/```, or ```%HOME%/vimfiles/``` on Windows.
+
+
 ## Dependent plugins
 
+### Required
+
+If you use vim without `+job` feature or your don't use [neovim](https://github.com/neovim/neovim), following plugin is neccessary.
+
 - [vimproc.vim](https://github.com/Shougo/vimproc.vim)
+
+### Optional
+
+This plugin provies extensions for following plugins.
+
+- [Shougo/unite.vim](https://github.com/Shougo/unite.vim)
+- [Shougo/denite.nvim](https://github.com/Shougo/denite.nvim)
+- [ctrlpvim/ctrlp.vim](https://github.com/ctrlpvim/ctrlp.vim)
+- [junegunn/fzf](https://github.com/junegunn/fzf)
+- [LeafCage/alti.vim](https://github.com/LeafCage/alti.vim)
+- [kamichidu/vim-milqi](https://github.com/kamichidu/vim-milqi)
 
 
 ## Requirements
