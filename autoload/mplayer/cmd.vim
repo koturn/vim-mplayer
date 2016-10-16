@@ -74,7 +74,10 @@ endfunction
 
 function! mplayer#cmd#show_file_info() abort
   let file_info = s:mplayer.get_file_info()
-  if empty(file_info) | return | endif
+  if empty(file_info)
+    echoerr 'Failed to get file information'
+    return
+  endif
   let meta = file_info.meta
   let audio = file_info.audio
   let video = file_info.video

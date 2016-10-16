@@ -80,23 +80,23 @@ let s:MPlayer = {
 let s:instance_id = 0
 let s:mplayer_list = []
 
+function! mplayer#new() abort
+  let mplayer = deepcopy(s:MPlayer)
+  let mplayer.id = s:instance_id
+  let s:instance_id += 1
+  call add(s:mplayer_list, mplayer)
+
+  let group = 'MPlayer' . mplayer.id
+  execute 'augroup' group
+  execute '  autocmd!'
+  execute '  autocmd' group 'VimLeave * call s:mplayer_list[' . mplayer.id . '].stop()'
+  execute 'augroup END'
+  return mplayer
+endfunction
+
 
 if g:mplayer#_use_job
   if has('job')
-    function! mplayer#new() abort
-      let mplayer = deepcopy(s:MPlayer)
-      let mplayer.id = s:instance_id
-      let s:instance_id += 1
-      call add(s:mplayer_list, mplayer)
-
-      let group = 'MPlayer' . mplayer.id
-      execute 'augroup' group
-      execute '  autocmd!'
-      execute '  autocmd' group 'VimLeave * call s:mplayer_list[' . mplayer.id . '].stop()'
-      execute 'augroup END'
-      return mplayer
-    endfunction
-
     function! s:MPlayer.start(custom_option) abort
       if !executable(self.mplayer)
         echoerr 'Error: Please install mplayer.'
@@ -109,27 +109,8 @@ if g:mplayer#_use_job
       call self._read()
     endfunction
 
-    function! s:MPlayer.enqueue(...) abort
-      if !self.is_playing()
-        call self.start('')
-      endif
-      call ch_sendraw(self.handle, join(extend(s:make_loadcmds(s:List.flatten(a:000)), [s:DUMMY_COMMAND, '']), "\n"))
-      call self._read(s:WAIT_TIME)
-    endfunction
-
-    function! s:MPlayer.stop() abort
-      if !has_key(self, 'handle') || !self.is_playing() | return | endif
-      call job_stop(self.handle)
-    endfunction
-
     function! s:MPlayer.is_playing() abort
       return has_key(self, 'handle') && job_status(self.handle) ==# 'run'
-    endfunction
-
-    function! s:MPlayer._command(cmd) abort
-      if !self.is_playing() | return | endif
-      call ch_sendraw(self.handle, join([s:DUMMY_COMMAND, a:cmd, ''], "\n"))
-      return self._read()
     endfunction
 
     function! s:MPlayer._read(...) abort
@@ -139,20 +120,13 @@ if g:mplayer#_use_job
       return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
     endfunction
 
-    function! s:MPlayer._writeln(text) abort
-      call ch_sendraw(self.handle, a:text . "\n")
+    function! s:MPlayer._write(text) abort
+      call ch_sendraw(self.handle, a:text)
     endfunction
 
     function! s:MPlayer.flush() abort
       if !self.is_playing() | return | endif
       return [ch_readraw(self.handle), ch_readraw(self.handle, {'part': 'err'})]
-    endfunction
-
-    function! s:MPlayer.get_file_info() abort
-      if !self.is_playing() | return | endif
-      call ch_sendraw(self.handle, s:DUMMY_COMMAND . "\n")
-      call ch_sendraw(self.handle, join(s:INFO_COMMANDS, "\n") . "\n")
-      return s:get_file_info(substitute(iconv(self._read(), s:TENC, &enc), "'", '', 'g'))
     endfunction
   elseif has('nvim')
     function! s:on_stdout(id, data, e) abort dict
@@ -161,21 +135,6 @@ if g:mplayer#_use_job
 
     function! s:on_stderr(id, data, e) abort dict
       let self.stderr .= join(a:data, "\n")
-    endfunction
-
-    function! mplayer#new() abort
-      let mplayer = deepcopy(s:MPlayer)
-      let mplayer.jobopt = {}
-      let mplayer.id = s:instance_id
-      let s:instance_id += 1
-      call add(s:mplayer_list, mplayer)
-
-      let group = 'MPlayer' . mplayer.id
-      execute 'augroup' group
-      execute '  autocmd!'
-      execute '  autocmd' group 'VimLeave * call s:mplayer_list[' . mplayer.id . '].stop()'
-      execute 'augroup END'
-      return mplayer
     endfunction
 
     function! s:MPlayer.start(custom_option) abort
@@ -195,20 +154,6 @@ if g:mplayer#_use_job
       call self._read()
     endfunction
 
-    function! s:MPlayer.enqueue(...) abort
-      if !self.is_playing()
-        call self.start('')
-      endif
-      call jobsend(self.handle, join(extend(s:make_loadcmds(s:List.flatten(a:000)), [s:DUMMY_COMMAND, '']), "\n"))
-      call self._read(s:WAIT_TIME)
-    endfunction
-
-    function! s:MPlayer.stop() abort
-      if self.is_playing()
-        call jobsend(self.handle, "quit\n")
-      endif
-    endfunction
-
     function! s:MPlayer.is_playing() abort
       try
         call jobpid(self.handle)
@@ -216,12 +161,6 @@ if g:mplayer#_use_job
       catch
         return 0
       endtry
-    endfunction
-
-    function! s:MPlayer._command(cmd) abort
-      if !self.is_playing() | return | endif
-      call jobsend(self.handle, join([s:DUMMY_COMMAND, a:cmd, ''], "\n"))
-      return self._read()
     endfunction
 
     function! s:MPlayer._read(...) abort
@@ -232,8 +171,8 @@ if g:mplayer#_use_job
       return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
     endfunction
 
-    function! s:MPlayer._writeln(text) abort
-      call jobsend(self.handle, a:text . "\n")
+    function! s:MPlayer._write(text) abort
+      call jobsend(self.handle, a:text)
     endfunction
 
     function! s:MPlayer.flush() abort
@@ -242,32 +181,10 @@ if g:mplayer#_use_job
       let [self.jobopt.stdout, self.jobopt.stderr] = ['', '']
       return r
     endfunction
-
-    function! s:MPlayer.get_file_info() abort
-      if !self.is_playing() | return | endif
-      call jobsend(self.handle, s:DUMMY_COMMAND . "\n")
-      call jobsend(self.handle, join(s:INFO_COMMANDS, "\n") . "\n")
-      return s:get_file_info(substitute(iconv(self._read(), s:TENC, &enc), "'", '', 'g'))
-    endfunction
   else
     echoerr 'Unexpected environment'
   endif
 else
-  function! mplayer#new() abort
-    let mplayer = deepcopy(s:MPlayer)
-    let mplayer.handle = 'mplayer-' . s:instance_id
-    let mplayer.id = s:instance_id
-    let s:instance_id += 1
-    call add(s:mplayer_list, mplayer)
-
-    let group = 'MPlayer' . mplayer.id
-    execute 'augroup' group
-    execute '  autocmd!'
-    execute '  autocmd' group 'VimLeave * call s:mplayer_list[' . mplayer.id . '].stop()'
-    execute 'augroup END'
-    return mplayer
-  endfunction
-
   function! s:MPlayer.start(custom_option) abort
     if !executable(self.mplayer)
       echoerr 'Error: Please install mplayer.'
@@ -282,19 +199,6 @@ else
     call self._read()
   endfunction
 
-  function! s:MPlayer.enqueue(...) abort
-    if !self.is_playing()
-      call self.start('')
-    endif
-    call s:PM.writeln(self.handle, join(add(s:make_loadcmds(s:List.flatten(a:000)), s:DUMMY_COMMAND), "\n"))
-    call self._read(s:WAIT_TIME)
-  endfunction
-
-  function! s:MPlayer.stop() abort
-    if !self.is_playing() | return | endif
-    call s:PM.kill(self.handle)
-  endfunction
-
   function! s:MPlayer.is_playing() abort
     let status = 'dead'
     try
@@ -304,12 +208,6 @@ else
     return status ==# 'inactive' || status ==# 'active'
   endfunction
 
-  function! s:MPlayer._command(cmd) abort
-    if !self.is_playing() | return | endif
-    call s:PM.writeln(self.handle, join([s:DUMMY_COMMAND, a:cmd], "\n"))
-    return self._read()
-  endfunction
-
   function! s:MPlayer._read(...) abort
     let wait_time = get(a:, 1, s:WAIT_TIME)
     let pattern = get(a:, 2, [])
@@ -317,20 +215,13 @@ else
     return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
   endfunction
 
-  function! s:MPlayer._writeln(text) abort
-    call s:PM.writeln(self.handle, a:text)
+  function! s:MPlayer._write(text) abort
+    call s:PM.write(self.handle, a:text)
   endfunction
 
   function! s:MPlayer.flush() abort
     if !self.is_playing() | return | endif
     return s:PM.read(self.handle, [])
-  endfunction
-
-  function! s:MPlayer.get_file_info() abort
-    if !self.is_playing() | return | endif
-    call s:PM.writeln(self.handle, s:DUMMY_COMMAND)
-    call s:PM.writeln(self.handle, join(s:INFO_COMMANDS, "\n"))
-    return s:get_file_info(substitute(iconv(self._read(), s:TENC, &enc), "'", '', 'g'))
   endfunction
 endif
 
@@ -346,6 +237,42 @@ function! s:MPlayer.play(...) abort
   call self.enqueue(filelist)
 endfunction
 
+function! s:MPlayer.enqueue(...) abort
+  if !self.is_playing()
+    call self.start('')
+  endif
+  call self._write(join(extend(s:make_loadcmds(s:List.flatten(a:000)), [s:DUMMY_COMMAND, '']), "\n"))
+  call self._read(s:WAIT_TIME)
+endfunction
+
+function! s:MPlayer.stop() abort
+  if !self.is_playing() | return | endif
+  call self._write("quit\n")
+endfunction
+
+function! s:MPlayer.get_file_info() abort
+  if !self.is_playing() | return | endif
+  call self._write(s:DUMMY_COMMAND . "\n")
+  call self._write(join(s:INFO_COMMANDS, "\n") . "\n")
+  return s:get_file_info(substitute(iconv(self._read(), s:TENC, &enc), "'", '', 'g'))
+endfunction
+
+function! s:MPlayer._command(cmd) abort
+  if !self.is_playing() | return | endif
+  call self._write(join([s:DUMMY_COMMAND, a:cmd, ''], "\n"))
+  return self._read()
+endfunction
+
+function! s:MPlayer.command(cmd, ...) abort
+  if !self.is_playing() | return | endif
+  let is_iconv = get(a:, 1, 0)
+  let str = self._command(a:cmd)
+  if is_iconv
+    let str = iconv(str, s:TENC, &enc)
+  endif
+  return matchstr(substitute(str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\zs.*$')
+endfunction
+
 function! s:MPlayer.next(...) abort
   let n = get(a:, 1, 1)
   let text = iconv(self._command('pt_step ' . n), s:TENC, &enc)
@@ -358,16 +285,6 @@ function! s:MPlayer.prev(...) abort
   let text = iconv(self._command('pt_step ' . n), s:TENC, &enc)
   call self._read()
   return text
-endfunction
-
-function! s:MPlayer.command(cmd, ...) abort
-  if !self.is_playing() | return | endif
-  let is_iconv = get(a:, 1, 0)
-  let str = self._command(a:cmd)
-  if is_iconv
-    let str = iconv(str, s:TENC, &enc)
-  endif
-  return matchstr(substitute(str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\zs.*$')
 endfunction
 
 function! s:MPlayer.set_seek(pos) abort
