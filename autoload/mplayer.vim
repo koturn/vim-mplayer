@@ -80,6 +80,7 @@ let s:MPlayer = {
 let s:instance_id = 0
 let s:mplayer_list = []
 
+
 function! mplayer#new() abort
   let mplayer = deepcopy(s:MPlayer)
   let mplayer.id = s:instance_id
@@ -92,6 +93,10 @@ function! mplayer#new() abort
   execute '  autocmd' group 'VimLeave * call s:mplayer_list[' . mplayer.id . '].stop()'
   execute 'augroup END'
   return mplayer
+endfunction
+
+function! mplayer#_import_local_var(name) abort
+  return s:[a:name]
 endfunction
 
 
@@ -288,6 +293,14 @@ function! s:MPlayer.prev(...) abort
   return text
 endfunction
 
+function! s:MPlayer.set_loop(n) abort
+  call self._write('loop ' . a:n . " 1\n")
+endfunction
+
+function! s:MPlayer.set_volume(level) abort
+  call self._write('volume ' . a:level . " 1\n")
+endfunction
+
 function! s:MPlayer.set_seek(pos) abort
   let second = s:to_second(a:pos)
   let lastchar = a:pos[-1 :]
@@ -295,6 +308,14 @@ function! s:MPlayer.set_seek(pos) abort
         \ : lastchar ==# 's' || lastchar =~# '\d' ? self._command('seek ' . a:pos . ' 2')
         \ : lastchar ==# '%' ? self._command('seek ' . a:pos . ' 1')
         \ : ''
+endfunction
+
+function! s:MPlayer.set_seek_to_head() abort
+  call self._write("seek 0 1\n")
+endfunction
+
+function! s:MPlayer.set_seek_to_end() abort
+  call self._write("seek 100 1\n")
 endfunction
 
 function! s:MPlayer.set_speed(speed, is_scaletempo) abort
@@ -312,8 +333,12 @@ function! s:MPlayer.set_equalizer(band_str) abort
   endif
 endfunction
 
-function! mplayer#_import_local_var(name) abort
-  return s:[a:name]
+function! s:MPlayer.toggle_mute() abort
+  call self._write("mute\n")
+endfunction
+
+function! s:MPlayer.toggle_pause() abort
+  call self._write("pause\n")
 endfunction
 
 

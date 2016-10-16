@@ -44,14 +44,42 @@ function! mplayer#cmd#command(cmd) abort
   echo s:mplayer.command(a:cmd)
 endfunction
 
+function! mplayer#cmd#set_loop(n) abort
+  call s:mplayer.set_loop(a:n)
+endfunction
+
+function! mplayer#cmd#set_volume(level) abort
+  call call(s:mplayer.set_volume, a:level, s:mplayer)
+endfunction
+
+function! mplayer#cmd#set_seek(pos) abort
+  call s:mplayer.set_seek(a:pos)
+endfunction
+
+function! mplayer#cmd#set_seek_to_head() abort
+  call s:mplayer.set_seek_to_head()
+endfunction
+
+function! mplayer#cmd#set_seek_to_end() abort
+  call s:mplayer.set_seek_to_end()
+endfunction
+
 function! mplayer#cmd#set_speed(speed, is_scaletempo) abort
-  for text in s:mplayer(a:speed, a:is_scaletempo)
+  for text in s:mplayer.set_speed(a:speed, a:is_scaletempo)
     echo text
   endfor
 endfunction
 
 function! mplayer#cmd#set_equalizer(band_str) abort
   call s:mplayer.set_equalizer(a:band_str)
+endfunction
+
+function! mplayer#cmd#toggle_mute() abort
+  call s:mplayer.toggle_mute()
+endfunction
+
+function! mplayer#cmd#toggle_pause() abort
+  call s:mplayer.toggle_pause()
 endfunction
 
 
@@ -62,10 +90,6 @@ function! mplayer#cmd#toggle_rt_timeinfo() abort
     call s:start_rt_info()
   endif
   let s:rt_sw = !s:rt_sw
-endfunction
-
-function! mplayer#cmd#set_seek(pos) abort
-  call s:mplayer.set_seek(a:pos)
 endfunction
 
 function! mplayer#cmd#operate_with_key() abort
