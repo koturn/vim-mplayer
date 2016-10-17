@@ -123,7 +123,7 @@ if g:mplayer#_use_job
 
     function! s:MPlayer.flush() abort
       if !self.is_playing() | return | endif
-      return [ch_readraw(self.handle), ch_readraw(self.handle, {'part': 'err'})]
+      return [ch_readraw(self.handle, {'timeout': 0}), ch_readraw(self.handle, {'part': 'err', 'timeout': 0})]
     endfunction
   elseif has('nvim')
     function! s:on_stdout(id, data, e) abort dict

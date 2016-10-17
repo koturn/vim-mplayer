@@ -49,7 +49,7 @@ function! mplayer#cmd#next(...) abort
 endfunction
 
 function! mplayer#cmd#command(cmd) abort
-  echo s:mplayer.command(a:cmd)
+  echo s:mplayer.command(a:cmd, 1)
 endfunction
 
 function! mplayer#cmd#set_loop(n) abort
