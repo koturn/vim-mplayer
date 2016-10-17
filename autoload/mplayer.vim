@@ -33,7 +33,6 @@ let s:List = s:V.import('Data.List')
 let s:PM = s:V.import('ProcessManager')
 
 let s:WAIT_TIME = g:mplayer#_use_job ? 50 : 0.05 | lockvar s:WAIT_TIME
-let s:EXIT_KEYCODE = char2nr('q') | lockvar s:EXIT_KEYCODE
 if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
   let s:TENC = 'cp932'
 else
@@ -60,13 +59,6 @@ let s:INFO_COMMANDS = [
       \ 'get_video_codec', 'get_video_bitrate', 'get_video_resolution'
       \]
 lockvar s:INFO_COMMANDS
-let s:KEY_ACTION_DICT = {
-      \ "\<Left>": 'seek -10',
-      \ "\<Right>": 'seek 10',
-      \ "\<Up>": 'seek 60',
-      \ "\<Down>": 'seek -60'
-      \}
-lockvar s:KEY_ACTION_DICT
 
 let s:eq_presets = mplayer#complete#_import_local_var('eq_presets')
 let s:SUB_ARG_DICT = mplayer#complete#_import_local_var('SUB_ARG_DICT')

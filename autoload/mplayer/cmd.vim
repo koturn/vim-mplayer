@@ -15,6 +15,14 @@ let s:PM = s:V.import('ProcessManager')
 let s:DUMMY_COMMAND = mplayer#_import_local_var('DUMMY_COMMAND')
 let s:LINE_BREAK = mplayer#_import_local_var('LINE_BREAK')
 let s:HELP_DICT = mplayer#complete#_import_local_var('HELP_DICT')
+let s:EXIT_KEYCODE = char2nr('q') | lockvar s:EXIT_KEYCODE
+let s:KEY_ACTION_DICT = {
+      \ "\<Left>": 'seek -10',
+      \ "\<Right>": 'seek 10',
+      \ "\<Up>": 'seek 60',
+      \ "\<Down>": 'seek -60'
+      \}
+lockvar s:KEY_ACTION_DICT
 
 let s:mplayer = mplayer#new()
 let s:rt_sw = 0
@@ -93,7 +101,19 @@ function! mplayer#cmd#toggle_rt_timeinfo() abort
 endfunction
 
 function! mplayer#cmd#operate_with_key() abort
-  call s:mplayer.operate_with_key()
+  if !s:mplayer.is_playing() | return | endif
+  echo "Type 'q' to exit this mode"
+  let key = getchar()
+  while key isnot s:EXIT_KEYCODE
+    if type(key) == 0
+      call s:mplayer._write('key_down_event ' . key . "\n")
+    elseif has_key(s:KEY_ACTION_DICT, key)
+      call s:mplayer._write(s:KEY_ACTION_DICT[key] . "\n")
+    endif
+    let key = getchar()
+  endwhile
+  call s:mplayer._write(s:DUMMY_COMMAND . "\n")
+  call s:mplayer._read()
 endfunction
 
 function! mplayer#cmd#show_file_info() abort
