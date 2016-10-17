@@ -144,8 +144,7 @@ if g:mplayer#_use_job
             \ 'stdout': '',
             \ 'stderr': '',
             \ 'on_stdout': function('s:on_stdout'),
-            \ 'on_stderr': function('s:on_stderr'),
-            \ 'on_exit': function('s:on_exit')
+            \ 'on_stderr': function('s:on_stderr')
             \}
       let self.handle = jobstart(join([self.mplayer, self.option, a:custom_option]), self.jobopt)
       call self._read()
