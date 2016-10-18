@@ -111,8 +111,8 @@ if g:mplayer#_use_job
     endfunction
 
     function! s:MPlayer._read(...) abort
-      let wait_time = get(a:, 1, s:WAIT_TIME)
-      let pattern = get(a:, 2, [])
+      let wait_time = a:0 > 0 ? a:1 : s:WAIT_TIME
+      let pattern = a:0 > 1 ? a:2 : []
       let raw_text = ch_readraw(self.handle, {'timeout': wait_time})
       return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
     endfunction
@@ -160,7 +160,7 @@ if g:mplayer#_use_job
     endfunction
 
     function! s:MPlayer._read(...) abort
-      let wait_time = get(a:, 1, s:WAIT_TIME)
+      let wait_time = a:0 > 0 ? a:1 : s:WAIT_TIME
       execute 'sleep' wait_time . 'm'
       let raw_text = self.jobopt.stdout
       let self.jobopt.stdout = ''
@@ -206,8 +206,8 @@ else
   endfunction
 
   function! s:MPlayer._read(...) abort
-    let wait_time = get(a:, 1, s:WAIT_TIME)
-    let pattern = get(a:, 2, [])
+    let wait_time = a:0 > 0 ? a:1 : s:WAIT_TIME
+    let pattern = a:0 > 1 ? a:2 : []
     let raw_text = s:PM.read_wait(self.handle, wait_time, [])[0]
     return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
   endfunction
@@ -262,7 +262,7 @@ endfunction
 
 function! s:MPlayer.command(cmd, ...) abort
   if !self.is_playing() | return | endif
-  let is_iconv = get(a:, 1, 0)
+  let is_iconv = a:0 > 0 ? a:1 : 0
   let str = self._command(a:cmd)
   if is_iconv
     let str = iconv(str, s:TENC, &enc)
@@ -271,14 +271,14 @@ function! s:MPlayer.command(cmd, ...) abort
 endfunction
 
 function! s:MPlayer.next(...) abort
-  let n = get(a:, 1, 1)
+  let n = a:0 > 0 ? a:1 : 1
   let text = iconv(self._command('pt_step ' . n), s:TENC, &enc)
   call self._read()
   return text
 endfunction
 
 function! s:MPlayer.prev(...) abort
-  let n = -get(a:, 1, 1)
+  let n = -(a:0 > 0 ? a:1 : 1)
   let text = iconv(self._command('pt_step ' . n), s:TENC, &enc)
   call self._read()
   return text
