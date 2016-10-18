@@ -14,6 +14,7 @@ set cpo&vim
 let s:source = {
       \ 'name': 'mplayer',
       \ 'description': 'Music player',
+      \ 'default_kind': 'mplayer'
       \}
 
 function! s:source.complete(args, context, arglead, cmdline, cursorpos) abort
@@ -41,7 +42,6 @@ function! s:source.gather_candidates(args, context) abort
   let len = len(s:dir)
   let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
   return map(split(globpath(s:dir . '**', glob_pattern, 1), "\n"), '{
-        \ "kind": "mplayer",
         \ "action__path": v:val,
         \ "word": v:val[len :],
         \}')
