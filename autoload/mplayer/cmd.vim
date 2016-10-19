@@ -122,9 +122,7 @@ function! mplayer#cmd#show_file_info() abort
     echoerr 'Failed to get file information'
     return
   endif
-  let meta = file_info.meta
-  let audio = file_info.audio
-  let video = file_info.video
+  let [meta, audio, video] = [file_info.meta, file_info.audio, file_info.video]
   echo '[STANDARD INFORMATION]'
   echo '  posiotion: ' s:to_timestr(file_info.time_length) '/' s:to_timestr(file_info.time_pos) ' (' . file_info.percent_pos . '%)'
   echo '  filename:  ' file_info.filename
