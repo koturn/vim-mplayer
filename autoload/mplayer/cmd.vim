@@ -241,10 +241,8 @@ endif
 function! s:to_timestr(secstr) abort
   let second = str2nr(a:secstr)
   let dec_part = str2float(a:secstr) - second
-  let hour = second / 3600
-  let second = second % 3600
-  let minute = second / 60
-  let second = second % 60
+  let [hour, second] = [second / 3600, second % 3600]
+  let [minute, second] = [second / 60, second % 60]
   return printf('%02d:%02d:%02d.%1d', hour, minute, second, float2nr(dec_part * 10))
 endfunction
 
