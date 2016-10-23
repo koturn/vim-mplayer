@@ -226,7 +226,7 @@ endif
 function! s:MPlayer.play(...) abort
   let pos = match(a:000, '^--$')
   if pos == -1
-    let pos = len(a:000)
+    let pos = a:0
   endif
   let custom_option = join(a:000[pos + 1 :], ' ')
   call self.start(custom_option)
