@@ -261,7 +261,6 @@ function! s:MPlayer._command(cmd) abort
 endfunction
 
 function! s:MPlayer.command(cmd, ...) abort
-  if !self.is_playing() | return | endif
   let is_iconv = a:0 > 0 ? a:1 : 0
   let str = self._command(a:cmd)
   if is_iconv
@@ -272,16 +271,12 @@ endfunction
 
 function! s:MPlayer.next(...) abort
   let n = a:0 > 0 ? a:1 : 1
-  let text = iconv(self._command('pt_step ' . n), s:TENC, &enc)
-  call self._read()
-  return text
+  return iconv(self._command('pt_step ' . n), s:TENC, &enc)
 endfunction
 
 function! s:MPlayer.prev(...) abort
   let n = -(a:0 > 0 ? a:1 : 1)
-  let text = iconv(self._command('pt_step ' . n), s:TENC, &enc)
-  call self._read()
-  return text
+  return iconv(self._command('pt_step ' . n), s:TENC, &enc)
 endfunction
 
 function! s:MPlayer.set_loop(n) abort
