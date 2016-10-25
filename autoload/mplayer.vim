@@ -197,12 +197,12 @@ else
   endfunction
 
   function! s:MPlayer.is_playing() abort
-    let status = 'dead'
     try
       let status = s:PM.status(self.handle)
+      return status ==# 'inactive' || status ==# 'active'
     catch
+      return 0
     endtry
-    return status ==# 'inactive' || status ==# 'active'
   endfunction
 
   function! s:MPlayer._read(...) abort
