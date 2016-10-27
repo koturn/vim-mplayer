@@ -57,7 +57,7 @@ function! mplayer#cmd#set_loop(n) abort
 endfunction
 
 function! mplayer#cmd#set_volume(level) abort
-  call call(s:mplayer.set_volume, a:level, s:mplayer)
+  call s:mplayer.set_volume(a:level)
 endfunction
 
 function! mplayer#cmd#set_seek(pos) abort
