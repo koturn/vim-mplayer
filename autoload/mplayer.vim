@@ -23,7 +23,7 @@ else
         \ '-nofontconfig -idle -quiet -slave -af equalizer=0:0:0:0:0:0:0:0:0:0')
 endif
 let g:mplayer#suffixes = get(g:, 'mplayer#suffixes', ['*'])
-let g:mplayer#_use_job = get(g:, 'mplayer#_use_job', has('job') || has('nvim'))
+let g:mplayer#engine = get(g:, 'mplayer#engine', has('job') || has('nvim') ? 'job' : 'vimproc')
 let g:mplayer#_use_timer = get(g:, 'mplayer#_use_timer', has('timers'))
 
 let g:mplayer#enable_ctrlp_multi_select = get(g:, 'mplayer#enable_ctrlp_multi_select', 1)
@@ -32,7 +32,6 @@ let s:V = vital#mplayer#new()
 let s:List = s:V.import('Data.List')
 let s:PM = s:V.import('ProcessManager')
 
-let s:WAIT_TIME = g:mplayer#_use_job ? 50 : 0.05 | lockvar s:WAIT_TIME
 if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
   let s:TENC = 'cp932'
 else
@@ -73,8 +72,9 @@ let s:instance_id = 0
 let s:mplayer_list = []
 
 
-function! mplayer#new() abort
-  let mplayer = deepcopy(s:MPlayer)
+function! mplayer#new(...) abort
+  let engine = a:0 > 0 ? a:1 : g:mplayer#engine
+  let mplayer = extend(copy(s:MPlayer), mplayer#engine#{engine}#define())
   let mplayer.id = s:instance_id
   let s:instance_id += 1
   call add(s:mplayer_list, mplayer)
@@ -90,137 +90,6 @@ endfunction
 function! mplayer#_import_local_var(name) abort
   return s:[a:name]
 endfunction
-
-
-if g:mplayer#_use_job
-  if has('job')
-    function! s:MPlayer.start(custom_option) abort
-      if !executable(self.mplayer)
-        echoerr 'Error: Please install mplayer.'
-        return
-      endif
-      call self.stop()
-      let self.handle = job_start(join([self.mplayer, self.option, a:custom_option]), {
-            \ 'out_mode': 'raw'
-            \})
-      call self._read()
-    endfunction
-
-    function! s:MPlayer.is_playing() abort
-      return has_key(self, 'handle') && job_status(self.handle) ==# 'run'
-    endfunction
-
-    function! s:MPlayer._read(...) abort
-      let wait_time = a:0 > 0 ? a:1 : s:WAIT_TIME
-      let pattern = a:0 > 1 ? a:2 : []
-      let raw_text = ch_readraw(self.handle, {'timeout': wait_time})
-      return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
-    endfunction
-
-    function! s:MPlayer._write(text) abort
-      call ch_sendraw(self.handle, a:text)
-    endfunction
-
-    function! s:MPlayer.flush() abort
-      if !self.is_playing() | return | endif
-      return [ch_readraw(self.handle, {'timeout': 0}), ch_readraw(self.handle, {'part': 'err', 'timeout': 0})]
-    endfunction
-  elseif has('nvim')
-    function! s:on_stdout(id, data, e) abort dict
-      let self.stdout .= join(a:data, "\n")
-    endfunction
-
-    function! s:on_stderr(id, data, e) abort dict
-      let self.stderr .= join(a:data, "\n")
-    endfunction
-
-    function! s:MPlayer.start(custom_option) abort
-      if !executable(self.mplayer)
-        echoerr 'Error: Please install mplayer.'
-        return
-      endif
-      call self.stop()
-      let self.jobopt = {
-            \ 'stdout': '',
-            \ 'stderr': '',
-            \ 'on_stdout': function('s:on_stdout'),
-            \ 'on_stderr': function('s:on_stderr')
-            \}
-      let self.handle = jobstart(join([self.mplayer, self.option, a:custom_option]), self.jobopt)
-      call self._read()
-    endfunction
-
-    function! s:MPlayer.is_playing() abort
-      try
-        call jobpid(self.handle)
-        return 1
-      catch
-        return 0
-      endtry
-    endfunction
-
-    function! s:MPlayer._read(...) abort
-      let wait_time = a:0 > 0 ? a:1 : s:WAIT_TIME
-      execute 'sleep' wait_time . 'm'
-      let raw_text = self.jobopt.stdout
-      let self.jobopt.stdout = ''
-      return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
-    endfunction
-
-    function! s:MPlayer._write(text) abort
-      call jobsend(self.handle, a:text)
-    endfunction
-
-    function! s:MPlayer.flush() abort
-      if !self.is_playing() | return | endif
-      let r = [self.jobopt.stdout, self.jobopt.stderr]
-      let [self.jobopt.stdout, self.jobopt.stderr] = ['', '']
-      return r
-    endfunction
-  else
-    echoerr 'Unexpected environment'
-  endif
-else
-  function! s:MPlayer.start(custom_option) abort
-    if !executable(self.mplayer)
-      echoerr 'Error: Please install mplayer.'
-      return
-    endif
-    if !s:PM.is_available()
-      echoerr 'Error: vimproc is unavailable.'
-      return
-    endif
-    call self.stop()
-    let self.handle = 'mplayer-' . self.id
-    call s:PM.touch(self.handle, join([self.mplayer, self.option, a:custom_option]))
-    call self._read()
-  endfunction
-
-  function! s:MPlayer.is_playing() abort
-    try
-      let status = s:PM.status(self.handle)
-      return status ==# 'inactive' || status ==# 'active'
-    catch
-      return 0
-    endtry
-  endfunction
-
-  function! s:MPlayer._read(...) abort
-    let wait_time = a:0 > 0 ? a:1 : s:WAIT_TIME
-    let pattern = a:0 > 1 ? a:2 : []
-    let raw_text = s:PM.read_wait(self.handle, wait_time, [])[0]
-    return substitute(raw_text, s:DUMMY_PATTERN, '', 'g')
-  endfunction
-
-  function! s:MPlayer._write(text) abort
-    call s:PM.write(self.handle, a:text)
-  endfunction
-
-  function! s:MPlayer.flush() abort
-    if !self.is_playing() | return | endif
-    return s:PM.read(self.handle, [])
-  endfunction
-endif
 
 
 function! s:MPlayer.play(...) abort
@@ -239,7 +108,7 @@ function! s:MPlayer.enqueue(...) abort
     call self.start('')
   endif
   call self._write(join(extend(s:make_loadcmds(s:List.flatten(a:000)), [s:DUMMY_COMMAND, '']), "\n"))
-  call self._read(s:WAIT_TIME)
+  call self._read()
 endfunction
 
 function! s:MPlayer.stop() abort
@@ -249,15 +118,13 @@ endfunction
 
 function! s:MPlayer.get_file_info() abort
   if !self.is_playing() | return | endif
-  call self._write(s:DUMMY_COMMAND . "\n")
-  call self._write(join(s:INFO_COMMANDS, "\n") . "\n")
-  return s:get_file_info(substitute(iconv(self._read(), s:TENC, &enc), "'", '', 'g'))
+  return s:get_file_info(substitute(iconv(self._command(join(s:INFO_COMMANDS, "\n")), s:TENC, &enc), "'", '', 'g'))
 endfunction
 
 function! s:MPlayer._command(cmd) abort
   if !self.is_playing() | return | endif
   call self._write(join([s:DUMMY_COMMAND, a:cmd, ''], "\n"))
-  return self._read()
+  return substitute(self._read(), s:DUMMY_PATTERN, '', 'g')
 endfunction
 
 function! s:MPlayer.command(cmd, ...) abort
@@ -280,11 +147,11 @@ function! s:MPlayer.prev(...) abort
 endfunction
 
 function! s:MPlayer.set_loop(n) abort
-  call self._write('loop ' . a:n . " 1\n")
+  return self._command('loop ' . a:n . " 1")
 endfunction
 
 function! s:MPlayer.set_volume(level) abort
-  call self._write('volume ' . a:level . " 1\n")
+  return self._command('volume ' . a:level . " 1")
 endfunction
 
 function! s:MPlayer.set_seek(pos) abort
@@ -297,11 +164,11 @@ function! s:MPlayer.set_seek(pos) abort
 endfunction
 
 function! s:MPlayer.set_seek_to_head() abort
-  call self._write("seek 0 1\n")
+  return self._command("seek 0 1")
 endfunction
 
 function! s:MPlayer.set_seek_to_end() abort
-  call self._write("seek 100 1\n")
+  return self._command("seek 100 1")
 endfunction
 
 function! s:MPlayer.set_speed(speed, is_scaletempo) abort
@@ -312,15 +179,15 @@ function! s:MPlayer.set_speed(speed, is_scaletempo) abort
 endfunction
 
 function! s:MPlayer.set_equalizer(band_str) abort
-  call self._command('af_eq_set_bands ' . get(s:eq_presets, a:band_str, a:band_str))
+  return self._command('af_eq_set_bands ' . get(s:eq_presets, a:band_str, a:band_str))
 endfunction
 
 function! s:MPlayer.toggle_mute() abort
-  call self._write("mute\n")
+  return self._command("mute")
 endfunction
 
 function! s:MPlayer.toggle_pause() abort
-  call self._write("pause\n")
+  return self._command("pause")
 endfunction
 
 

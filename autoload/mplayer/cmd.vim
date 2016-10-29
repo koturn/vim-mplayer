@@ -199,8 +199,7 @@ endfunction
 
 
 function! s:show_timeinfo() abort
-  call s:mplayer._write(join([s:DUMMY_COMMAND, 'get_time_pos', 'get_time_length', 'get_percent_pos', ''], "\n"))
-  let text = substitute(s:mplayer._read(), "'", '', 'g')
+  let text = substitute(s:mplayer._command(join(['get_time_pos', 'get_time_length', 'get_percent_pos'], "\n")), "'", '', 'g')
   let answers = map(split(text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
   if len(answers) == 3
     echo '[MPlayer] position:' s:to_timestr(answers[1]) '/' s:to_timestr(answers[0]) ' (' . answers[2] . '%)'
