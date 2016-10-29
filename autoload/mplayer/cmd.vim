@@ -211,7 +211,7 @@ if g:mplayer#_use_timer
 
   function! s:start_rt_info() abort
     if !s:mplayer.is_playing() | return | endif
-    let s:timer_id = timer_start(&updatetime, function('s:timer_update'), {'repeat': -1})
+    let s:timer_id = timer_start(g:mplayer#tiemr_cycle, function('s:timer_update'), {'repeat': -1})
   endfunction
 
   function! s:stop_rt_info() abort
@@ -222,6 +222,10 @@ if g:mplayer#_use_timer
     call s:show_timeinfo()
   endfunction
 else
+  augroup MPlayer
+    autocmd!
+  augroup END
+
   function! s:start_rt_info() abort
     if !s:mplayer.is_playing() | return | endif
     execute 'autocmd! MPlayer CursorHold,CursorHoldI * call s:update()'
@@ -231,9 +235,15 @@ else
     execute 'autocmd! MPlayer CursorHold,CursorHoldI'
   endfunction
 
+  let s:clock = 0
   function! s:update() abort
-    call s:show_timeinfo()
     call feedkeys(mode() ==# 'i' ? "\<C-g>\<ESC>" : "g\<ESC>", 'n')
+    if  s:clock < g:mplayer#tiemr_cycle
+      let s:clock += &updatetime
+    else
+      let s:clock = 0
+      call s:show_timeinfo()
+    endif
   endfunction
 endif
 

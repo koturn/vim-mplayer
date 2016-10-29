@@ -25,6 +25,7 @@ endif
 let g:mplayer#suffixes = get(g:, 'mplayer#suffixes', ['*'])
 let g:mplayer#engine = get(g:, 'mplayer#engine', has('job') || has('nvim') ? 'job' : 'vimproc')
 let g:mplayer#_use_timer = get(g:, 'mplayer#_use_timer', has('timers'))
+let g:mplayer#tiemr_cycle = 1000
 
 let g:mplayer#enable_ctrlp_multi_select = get(g:, 'mplayer#enable_ctrlp_multi_select', 1)
 
