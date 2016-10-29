@@ -41,11 +41,11 @@ function! mplayer#cmd#stop() abort
 endfunction
 
 function! mplayer#cmd#prev(...) abort
-  call call(s:mplayer.prev, a:000, s:mplayer)
+  echo call(s:mplayer.prev, a:000, s:mplayer)
 endfunction
 
 function! mplayer#cmd#next(...) abort
-  call call(s:mplayer.next, a:000, s:mplayer)
+  echo call(s:mplayer.next, a:000, s:mplayer)
 endfunction
 
 function! mplayer#cmd#command(cmd) abort
@@ -53,23 +53,23 @@ function! mplayer#cmd#command(cmd) abort
 endfunction
 
 function! mplayer#cmd#set_loop(n) abort
-  call s:mplayer.set_loop(a:n)
+  echo s:mplayer.set_loop(a:n)
 endfunction
 
 function! mplayer#cmd#set_volume(level) abort
-  call s:mplayer.set_volume(a:level)
+  echo s:mplayer.set_volume(a:level)
 endfunction
 
 function! mplayer#cmd#set_seek(pos) abort
-  call s:mplayer.set_seek(a:pos)
+  echo s:mplayer.set_seek(a:pos)
 endfunction
 
 function! mplayer#cmd#set_seek_to_head() abort
-  call s:mplayer.set_seek_to_head()
+  echo s:mplayer.set_seek_to_head()
 endfunction
 
 function! mplayer#cmd#set_seek_to_end() abort
-  call s:mplayer.set_seek_to_end()
+  echo s:mplayer.set_seek_to_end()
 endfunction
 
 function! mplayer#cmd#set_speed(speed, is_scaletempo) abort
@@ -79,15 +79,15 @@ function! mplayer#cmd#set_speed(speed, is_scaletempo) abort
 endfunction
 
 function! mplayer#cmd#set_equalizer(band_str) abort
-  call s:mplayer.set_equalizer(a:band_str)
+  echo s:mplayer.set_equalizer(a:band_str)
 endfunction
 
 function! mplayer#cmd#toggle_mute() abort
-  call s:mplayer.toggle_mute()
+  echo s:mplayer.toggle_mute()
 endfunction
 
 function! mplayer#cmd#toggle_pause() abort
-  call s:mplayer.toggle_pause()
+  echo s:mplayer.toggle_pause()
 endfunction
 
 
