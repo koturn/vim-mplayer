@@ -312,11 +312,7 @@ function! s:MPlayer.set_speed(speed, is_scaletempo) abort
 endfunction
 
 function! s:MPlayer.set_equalizer(band_str) abort
-  if has_key(s:eq_presets, a:band_str)
-    call self._command('af_eq_set_bands ' . s:eq_presets[a:band_str])
-  else
-    call self._command('af_eq_set_bands ' . a:band_str)
-  endif
+  call self._command('af_eq_set_bands ' . get(s:eq_presets, a:band_str, a:band_str))
 endfunction
 
 function! s:MPlayer.toggle_mute() abort
