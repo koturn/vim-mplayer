@@ -148,11 +148,11 @@ function! s:MPlayer.prev(...) abort
 endfunction
 
 function! s:MPlayer.set_loop(n) abort
-  return self._command('loop ' . a:n . " 1")
+  return self._command('loop ' . a:n . ' 1')
 endfunction
 
 function! s:MPlayer.set_volume(level) abort
-  return self._command('volume ' . a:level . " 1")
+  return self._command('volume ' . a:level . ' 1')
 endfunction
 
 function! s:MPlayer.set_seek(pos) abort
@@ -165,11 +165,11 @@ function! s:MPlayer.set_seek(pos) abort
 endfunction
 
 function! s:MPlayer.set_seek_to_head() abort
-  return self._command("seek 0 1")
+  return self._command('seek 0 1')
 endfunction
 
 function! s:MPlayer.set_seek_to_end() abort
-  return self._command("seek 100 1")
+  return self._command('seek 100 1')
 endfunction
 
 function! s:MPlayer.set_speed(speed, is_scaletempo) abort
@@ -184,11 +184,11 @@ function! s:MPlayer.set_equalizer(band_str) abort
 endfunction
 
 function! s:MPlayer.toggle_mute() abort
-  return self._command("mute")
+  return self._command('mute')
 endfunction
 
 function! s:MPlayer.toggle_pause() abort
-  return self._command("pause")
+  return self._command('pause')
 endfunction
 
 
