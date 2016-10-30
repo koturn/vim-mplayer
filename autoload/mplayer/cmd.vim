@@ -146,7 +146,7 @@ function! mplayer#cmd#show_file_info() abort
   endif
 endfunction
 
-function! mplayer#cmd#seekbar() abort
+function! mplayer#cmd#volumebar() abort
   noautocmd botright 2 new
   set nobuflisted bufhidden=unload buftype=nofile nonumber
   if &columns < 40
@@ -171,7 +171,7 @@ function! mplayer#cmd#seekbar() abort
       endif
       let level = level > max ? max : level < 0 ? 0 : level
       let p = level * 100 / max
-      call s:mplayer.set_seek(p . '%')
+      call s:mplayer.set_volume(p)
     endwhile
   catch
     echoerr v:exception
