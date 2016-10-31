@@ -131,10 +131,7 @@ endfunction
 function! s:MPlayer.command(cmd, ...) abort
   let is_iconv = a:0 > 0 ? a:1 : 0
   let str = self._command(a:cmd)
-  if is_iconv
-    let str = iconv(str, s:TENC, &enc)
-  endif
-  return matchstr(substitute(str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\zs.*$')
+  return matchstr(substitute(is_iconv ? iconv(str, s:TENC, &enc) : str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\zs.*$')
 endfunction
 
 function! s:MPlayer.next(...) abort
