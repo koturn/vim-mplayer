@@ -42,6 +42,11 @@ if has('nvim')
     call self._read()
   endfunction
 
+  function! s:MPlayerEngineJob.kill(custom_option) abort
+    if !self.is_playing() | return | endif
+    call jobstop(self.handle)
+  endfunction
+
   function! s:MPlayerEngineJob.is_playing() abort
     try
       call jobpid(self.handle)
@@ -78,6 +83,11 @@ else
           \ 'out_mode': 'raw'
           \})
     call self._read()
+  endfunction
+
+  function! s:MPlayerEngineJob.kill(custom_option) abort
+    if !self.is_playing() | return | endif
+    call job_stop(self.handle)
   endfunction
 
   function! s:MPlayerEngineJob.is_playing() abort

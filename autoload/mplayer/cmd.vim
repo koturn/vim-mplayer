@@ -40,6 +40,10 @@ function! mplayer#cmd#stop() abort
   call s:mplayer.stop()
 endfunction
 
+function! mplayer#cmd#kill() abort
+  call s:mplayer.kill()
+endfunction
+
 function! mplayer#cmd#prev(...) abort
   echo call(s:mplayer.prev, a:000, s:mplayer)
 endfunction

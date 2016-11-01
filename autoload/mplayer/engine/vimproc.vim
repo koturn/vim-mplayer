@@ -33,6 +33,11 @@ function! s:MPlayerEngineVimproc.start(custom_option) abort
   call self._read()
 endfunction
 
+function! s:MPlayerEngineVimproc.kill(custom_option) abort
+  if !self.is_playing() | return | endif
+  call s:PM.kill(self.handle)
+endfunction
+
 function! s:MPlayerEngineVimproc.is_playing() abort
   try
     let status = s:PM.status(self.handle)
