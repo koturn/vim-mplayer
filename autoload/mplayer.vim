@@ -185,7 +185,9 @@ function! s:MPlayer.toggle_mute() abort
 endfunction
 
 function! s:MPlayer.toggle_pause() abort
-  return self._command('pause')
+  if !self.is_playing() | return | endif
+  call self._write("pause\n")
+  return substitute(self._read(), s:DUMMY_PATTERN, '', 'g')
 endfunction
 
 
