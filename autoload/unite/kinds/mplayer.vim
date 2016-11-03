@@ -26,8 +26,22 @@ function! s:kind.action_table.play_music.func(candidates) abort
 endfunction
 
 
+let s:mplayer = mplayer#new()
+let s:kind.action_table.preview = {
+      \ 'description': 'preview music file',
+      \ 'is_quit': 0
+      \}
+function! s:kind.action_table.preview.func(candidate) abort
+  call s:mplayer.play(a:candidate.action__path)
+endfunction
+
+
 function! unite#kinds#mplayer#define() abort
   return s:kind
+endfunction
+
+function! unite#kinds#mplayer#stop_preview() abort
+  call s:mplayer.stop()
 endfunction
 
 

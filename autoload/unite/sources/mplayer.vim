@@ -14,7 +14,8 @@ set cpo&vim
 let s:source = {
       \ 'name': 'mplayer',
       \ 'description': 'Music player',
-      \ 'default_kind': 'mplayer'
+      \ 'default_kind': 'mplayer',
+      \ 'hooks': {}
       \}
 
 function! s:source.complete(args, context, arglead, cmdline, cursorpos) abort
@@ -45,6 +46,10 @@ function! s:source.gather_candidates(args, context) abort
         \ "action__path": v:val,
         \ "word": v:val[len :],
         \}')
+endfunction
+
+function! s:source.hooks.on_close(args, context) abort
+  call unite#kinds#mplayer#stop_preview()
 endfunction
 
 
