@@ -156,14 +156,14 @@ function! mplayer#cmd#volumebar() abort
   if &columns < 40
     echoerr 'column must be 30 or more'
   endif
-  let offset = 17 + strlen('position')
+  let offset = 15 + strlen('volume')
   let max = &columns - (offset + 7)
-  let level = max * str2nr(s:mplayer.command('get_percent_pos')) / 100
+  let level = max * str2nr(s:mplayer.command('get_property volume')) / 100
   let p = level * 100 / max
   let [winnr, c] = [winnr(), '']
   try
-    while c != char2nr('q')
-      call setline(1, printf('position (%3d / 100):   [%s]', p, repeat('|', level) . repeat(' ', max - level)))
+    while c isnot char2nr('q')
+      call setline(1, printf('volume (%3d / 100): [%s]', p, repeat('|', level) . repeat(' ', max - level)))
       redraw
       let c = getchar()
       if c is# "\<LeftMouse>" && v:mouse_win == winnr
