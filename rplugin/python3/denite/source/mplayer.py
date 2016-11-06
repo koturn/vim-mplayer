@@ -20,6 +20,9 @@ class Source(Base):
         self.name = 'mplayer'
         self.kind = 'mplayer'
 
+    def on_close(self, context):
+        self.vim.call('mplayer#denite#stop')
+
     def gather_candidates(self, context):
         path = os.path.abspath(os.path.expanduser((context['args'][0] if len(context['args']) > 0 else self.vim.eval('g:mplayer#default_dir'))))
         if path[-1] != '/':

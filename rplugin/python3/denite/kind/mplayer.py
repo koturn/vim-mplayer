@@ -18,4 +18,8 @@ class Kind(Base):
         self.default_action = 'mplayer'
 
     def action_mplayer(self, context):
-        self.vim.call('mplayer#cmd#enqueue', list(map(lambda e: e['action__path'], context['targets'])))
+        self.vim.call('mplayer#cmd#enqueue', list(map(lambda target: target['action__path'], context['targets'])))
+
+    def action_preview(self, context):
+        self.vim.call('mplayer#denite#play', [context['targets'][0]['action__path']])
+        return True
