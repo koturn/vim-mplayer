@@ -17,6 +17,7 @@ let s:source = {
       \ 'default_kind': 'mplayer',
       \ 'hooks': {}
       \}
+let s:has_704_279 = v:version > 704 || v:version == 704 && has('patch279')
 
 function! s:source.complete(args, context, arglead, cmdline, cursorpos) abort
   if a:arglead ==# '~'
@@ -42,7 +43,8 @@ function! s:source.gather_candidates(args, context) abort
   endif
   let len = len(s:dir)
   let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
-  return map(split(globpath(s:dir . '**', glob_pattern, 1), "\n"), '{
+  let gp = s:has_704_279 ? globpath(s:dir . '**', glob_pattern, 1, 1) : split(globpath(s:dir . '**', glob_pattern, 1), "\n")
+  return map(gp, '{
         \ "action__path": v:val,
         \ "word": v:val[len :],
         \}')
