@@ -9,9 +9,10 @@ denite.nvim: https://github.com/Shougo/denite.nvim
 """
 
 from .base import Base
+import glob
 import itertools
 import os
-import glob
+import platform
 
 
 class Source(Base):
@@ -30,10 +31,16 @@ class Source(Base):
         path_length = len(path)
         suffixes = self.vim.eval("get(g:, 'mplayer#suffixes', ['*'])")
         glob_patterns = ['*'] if len(suffixes) == 0 else suffixes
-        filelist = itertools.chain.from_iterable(
-                map(lambda glob_pattern: glob.glob(path + '*.' + glob_pattern), glob_patterns))
         return list(map(
             lambda filepath: {
                 'word': filepath[path_length: ],
                 'action__path': filepath},
-            filelist))
+            self.__glob(path, glob_patterns)))
+
+    def __glob(self, path, glob_patterns):
+        ver_tuple = list(map(int, platform.python_version_tuple()))
+        if ver_tuple[0] > 3 or ver_tuple[0] == 3 and ver_tuple[1] > 4:
+            return itertools.chain.from_iterable(
+                    map(lambda glob_pattern: glob.glob(path + '**/*.' + glob_pattern, recursive=True), glob_patterns))
+        else:
+            return self.vim.call('globpath', path + '**', '*.{' + ','.join(glob_patterns) + '}', 1, 1)
