@@ -19,22 +19,31 @@ let s:source = {
       \}
 let s:has_704_279 = v:version > 704 || v:version == 704 && has('patch279')
 
-function! s:source.complete(args, context, arglead, cmdline, cursorpos) abort
-  if a:arglead ==# '~'
-    return ['~/']
-  elseif a:arglead ==# ''
-    let dirs = map(filter(split(globpath('./', '*'), "\n"),
-          \ 'isdirectory(v:val)'), 'fnameescape(v:val[2 :]) . "/"')
-  else
-    let dirs = map(filter(split(expand(a:arglead . '*'), "\n"),
-          \ 'isdirectory(v:val)'), 'fnameescape(v:val) . "/"')
-  endif
-  if a:arglead[0] ==# '~'
-    let dirs = map(dirs, 'substitute(v:val, "^" . expand("~"), "~", "")')
-  endif
-  let arglead = tolower(a:arglead)
-  return filter(dirs, '!stridx(tolower(v:val), arglead)')
-endfunction
+if exists('*getcompletion')
+  function! s:source.complete(args, context, arglead, cmdline, cursorpos) abort
+    let dirs = getcompletion(a:arglead, 'dir')
+    let homedir = expand("~")
+    return a:arglead[0] ==# '~' ? map(dirs, 'substitute(v:val, "^" . homedir, "~", "")') : dirs
+  endfunction
+else
+  function! s:source.complete(args, context, arglead, cmdline, cursorpos) abort
+    if a:arglead ==# '~'
+      return ['~/']
+    elseif a:arglead ==# ''
+      let dirs = map(filter(split(globpath('./', '*'), "\n"),
+            \ 'isdirectory(v:val)'), 'fnameescape(v:val[2 :]) . "/"')
+    else
+      let dirs = map(filter(split(expand(a:arglead . '*'), "\n"),
+            \ 'isdirectory(v:val)'), 'fnameescape(v:val) . "/"')
+    endif
+    if a:arglead[0] ==# '~'
+      let homedir = expand("~")
+      let dirs = map(dirs, 'substitute(v:val, "^" . homedir, "~", "")')
+    endif
+    let arglead = tolower(a:arglead)
+    return filter(dirs, '!stridx(tolower(v:val), arglead)')
+  endfunction
+endif
 
 function! s:source.gather_candidates(args, context) abort
   let s:dir = expand(len(a:args) > 0 ? a:args[0] : get(g:, 'mplayer#default_dir', '~/'))
