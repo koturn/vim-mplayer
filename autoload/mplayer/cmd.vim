@@ -161,6 +161,7 @@ function! mplayer#cmd#volumebar() abort
   let level = max * str2nr(s:mplayer.command('get_property volume')) / 100
   let p = level * 100 / max
   let [winnr, c] = [winnr(), '']
+  echomsg "Type 'q' to quit"
   try
     while c isnot char2nr('q')
       call setline(1, printf('volume (%3d / 100): [%s]', p, repeat('|', level) . repeat(' ', max - level)))
@@ -180,6 +181,49 @@ function! mplayer#cmd#volumebar() abort
   catch
     echoerr v:exception
   finally
+    quit
+  endtry
+endfunction
+
+function! mplayer#cmd#seekbar() abort
+  if !has('timers')
+    throw '[vim-mplayer] mplayer#cmd#seekbar() requires timer-feature'
+  endif
+  noautocmd botright 2 new
+  set nobuflisted bufhidden=unload buftype=nofile nonumber
+  if &columns < 40
+    echoerr 'column must be 30 or more'
+  endif
+  let offset = 15 + strlen('seek')
+  let max = &columns - (offset + 7)
+  let s:seekpos = max * str2nr(s:mplayer.command('get_percent_pos')) / 100
+  let s:seek_percent = s:seekpos * 100 / max
+  let [winnr, c] = [winnr(), '']
+  call s:start_seekbar_timer()
+  echomsg "Type 'q' to quit"
+  try
+    while c isnot char2nr('q')
+      let c = s:getchar()
+      if c is 0
+        continue
+      elseif c is# "\<LeftMouse>" && v:mouse_win == winnr
+        let s:seekpos = v:mouse_col - offset
+        let s:seek_percent = s:seekpos * 100 / max
+        call s:mplayer._command('seek ' . s:seek_percent . ' 1')
+      elseif c is char2nr('h')
+        call s:mplayer._command('seek -10 0')
+      elseif c is char2nr('l')
+        call s:mplayer._command('seek 10 0')
+      endif
+      let s:seekpos = max * str2nr(s:mplayer.command('get_percent_pos')) / 100
+      let s:seek_percent = s:seekpos * 100 / max
+      call setline(1, printf('seek (%3d / 100): [%s]', s:seek_percent, repeat('|', s:seekpos) . repeat(' ', max - s:seekpos)))
+      redraw
+    endwhile
+  catch
+    echoerr v:exception
+  finally
+    call s:stop_seekbar_timer()
     quit
   endtry
 endfunction
@@ -215,15 +259,36 @@ if g:mplayer#_use_timer
 
   function! s:start_rt_info() abort
     if !s:mplayer.is_playing() | return | endif
-    let s:timer_id = timer_start(g:mplayer#tiemr_cycle, function('s:timer_update'), {'repeat': -1})
+    let s:timer_id = timer_start(g:mplayer#tiemr_cycle, function('s:rt_update'), {'repeat': -1})
   endfunction
 
   function! s:stop_rt_info() abort
     call timer_stop(s:timer_id)
   endfunction
 
-  function! s:timer_update(timer_id) abort
+  function! s:rt_update(timer_id) abort
     call s:show_timeinfo()
+  endfunction
+
+
+  let s:seekbar_timer_id = -1
+
+  function! s:start_seekbar_timer() abort
+    if !s:mplayer.is_playing() | return | endif
+    let s:seekbar_timer_id = timer_start(g:mplayer#tiemr_cycle, function('s:seekbar_update'), {'repeat': -1})
+  endfunction
+
+  function! s:stop_seekbar_timer() abort
+    call timer_stop(s:seekbar_timer_id)
+  endfunction
+
+  function! s:seekbar_update(seekbar_timer_id) abort
+    let offset = 15 + strlen('seek')
+    let max = &columns - (offset + 7)
+    let s:seekpos = max * str2nr(s:mplayer.command('get_percent_pos')) / 100
+    let s:seek_percent = s:seekpos * 100 / max
+    call setline(1, printf('seek (%3d / 100): [%s]', s:seek_percent, repeat('|', s:seekpos) . repeat(' ', max - s:seekpos)))
+    redraw
   endfunction
 else
   augroup MPlayer
@@ -258,6 +323,20 @@ function! s:to_timestr(secstr) abort
   let [minute, second] = [second / 60, second % 60]
   return printf('%02d:%02d:%02d.%1d', hour, minute, second, float2nr(dec_part * 10))
 endfunction
+
+if has('nvim')
+  function! s:getchar() abort
+    let c = getchar(0)
+    if c is 0
+      sleep 50m
+      return 0
+    else
+      return c
+    endif
+  endfunction
+else
+  let s:getchar = function('getchar')
+endif
 
 
 let &cpo = s:save_cpo
