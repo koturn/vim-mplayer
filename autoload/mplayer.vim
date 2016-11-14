@@ -192,23 +192,24 @@ endfunction
 
 
 function! s:make_loadcmds(args) abort
-  let loadcmds = []
+  let [loadcmds, is_win_cygwin] = [[], has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin]
+  let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
   for arg in a:args
     for item in split(expand(arg, 1), "\n")
-      if isdirectory(item)
-        let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
-        let dir_items = split(globpath(item, glob_pattern, 1), "\n")
-        call extend(loadcmds, map(filter(dir_items, 'filereadable(v:val)'), 's:process_file(v:val)'))
-      elseif item =~# '^\%(cdda\|cddb\|dvd\|file\|ftp\|gopher\|tv\|vcd\|http\|https\)://'
+      if item =~# '^\%(cdda\|cddb\|dvd\|file\|ftp\|gopher\|tv\|vcd\|http\|https\)://'
         call add(loadcmds, 'loadfile ' . item . ' 1')
       else
-        call add(loadcmds, s:process_file(expand(item, 1)))
+        let item = is_win_cygwin ? substitute(item, '^' . g:mplayer#cygwin_mount_dir . '/\(\a\)', '\1:', '') : item
+        if isdirectory(item)
+          let dir_items = split(globpath(item, glob_pattern, 1), "\n")
+          call extend(loadcmds, map(filter(dir_items, 'filereadable(v:val)'), 's:process_file(v:val)'))
+        else
+          call add(loadcmds, s:process_file(expand(item, 1)))
+        endif
       endif
     endfor
   endfor
-  return has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
-        \ ? map(loadcmds, 'substitute(v:val, g:mplayer#cygwin_mount_dir . "/\\(\\a\\)", "\\1:", "")')
-        \ : loadcmds
+  return loadcmds
 endfunction
 
 function! s:process_file(file) abort
