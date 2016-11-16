@@ -11,7 +11,6 @@ set cpo&vim
 
 if has('win32unix')
   let g:mplayer#use_win_mplayer_in_cygwin = get(g:, 'mplayer#use_win_mplayer_in_cygwin', 0)
-  let g:mplayer#cygwin_mount_dir = get(g:, 'mplayer#cygwin_mount_dir', '/cygdrive')
 endif
 
 let g:mplayer#mplayer = get(g:, 'mplayer#mplayer', 'mplayer')
@@ -193,16 +192,18 @@ endfunction
 
 function! s:make_loadcmds(args) abort
   let [loadcmds, is_win_cygwin] = [[], has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin]
-  let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
+  if is_win_cygwin
+    let cyg_subst_ptn = '^' . system('cygpath -u c:')[: -3] . '\(\a\)'
+  endif
+  let glob_ptn = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
   for arg in a:args
     for item in split(expand(arg, 1), "\n")
       if item =~# '^\%(cdda\|cddb\|dvd\|file\|ftp\|gopher\|tv\|vcd\|http\|https\)://'
         call add(loadcmds, 'loadfile ' . item . ' 1')
       else
-        let item = is_win_cygwin ? substitute(item, '^' . g:mplayer#cygwin_mount_dir . '/\(\a\)', '\1:', '') : item
+        let item = is_win_cygwin ? substitute(item, cyg_subst_ptn, '\1:', '') : item
         if isdirectory(item)
-          let dir_items = split(globpath(item, glob_pattern, 1), "\n")
-          call extend(loadcmds, map(filter(dir_items, 'filereadable(v:val)'), 's:process_file(v:val)'))
+          call extend(loadcmds, map(filter(split(globpath(item, glob_ptn, 1), "\n"), 'filereadable(v:val)'), 's:process_file(v:val)'))
         else
           call add(loadcmds, s:process_file(expand(item, 1)))
         endif
