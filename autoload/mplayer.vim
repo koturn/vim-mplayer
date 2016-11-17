@@ -152,8 +152,7 @@ function! s:MPlayer.set_volume(level) abort
 endfunction
 
 function! s:MPlayer.set_seek(pos) abort
-  let second = s:to_second(a:pos)
-  let lastchar = a:pos[-1 :]
+  let [second, lastchar] = [s:to_second(a:pos), a:pos[-1 :]]
   return second != -1 ? self._command('seek ' . second . ' 2')
         \ : lastchar ==# 's' || lastchar =~# '\d' ? self._command('seek ' . a:pos . ' 2')
         \ : lastchar ==# '%' ? self._command('seek ' . a:pos . ' 1')
@@ -245,15 +244,10 @@ function! s:get_file_info(text) abort
 endfunction
 
 function! s:to_second(timestr) abort
-  if a:timestr =~# '^\d\+:\d\+:\d\+\%(\.\d\+\)\?$'
-    let parts = split(a:timestr, ':')
-    return str2nr(parts[0]) * 3600 + str2nr(parts[1]) * 60 + str2nr(parts[2])
-  elseif a:timestr =~# '^\d\+:\d\+\%(\.\d\+\)\?$'
-    let parts = split(a:timestr, ':')
-    return str2nr(parts[0]) * 60 + str2nr(parts[1])
-  else
-    return -1
-  endif
+  let parts = split(a:timestr, ':')
+  return a:timestr =~# '^\d\+:\d\+:\d\+\%(\.\d\+\)\?$' ? (str2nr(parts[0]) * 3600 + str2nr(parts[1]) * 60 + str2nr(parts[2]))
+        \ : a:timestr =~# '^\d\+:\d\+\%(\.\d\+\)\?$' ? (str2nr(parts[0]) * 60 + str2nr(parts[1]))
+        \ : -1
 endfunction
 
 
