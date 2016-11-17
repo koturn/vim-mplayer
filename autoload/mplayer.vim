@@ -202,11 +202,9 @@ function! s:make_loadcmds(args) abort
         call add(loadcmds, 'loadfile ' . item . ' 1')
       else
         let item = is_win_cygwin ? substitute(item, cyg_subst_ptn, '\1:', '') : item
-        if isdirectory(item)
-          call extend(loadcmds, map(filter(split(globpath(item, glob_ptn, 1), "\n"), 'filereadable(v:val)'), 's:process_file(v:val)'))
-        else
-          call add(loadcmds, s:process_file(expand(item, 1)))
-        endif
+        let _ = isdirectory(item)
+              \ ? extend(loadcmds, map(filter(split(globpath(item, glob_ptn, 1), "\n"), 'filereadable(v:val)'), 's:process_file(v:val)'))
+              \ : add(loadcmds, s:process_file(expand(item, 1)))
       endif
     endfor
   endfor
