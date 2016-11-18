@@ -94,14 +94,8 @@ function! mplayer#cmd#toggle_pause() abort
   echo s:mplayer.toggle_pause()
 endfunction
 
-
 function! mplayer#cmd#toggle_rt_timeinfo() abort
-  if s:rt_sw
-    call s:stop_rt_info()
-  else
-    call s:start_rt_info()
-  endif
-  let s:rt_sw = !s:rt_sw
+  let [_, s:rt_sw] = [s:rt_sw ? s:stop_rt_info() : s:start_rt_info(), !s:rt_sw]
 endfunction
 
 function! mplayer#cmd#operate_with_key() abort
