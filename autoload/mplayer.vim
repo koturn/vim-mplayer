@@ -24,13 +24,14 @@ endif
 let g:mplayer#suffixes = get(g:, 'mplayer#suffixes', ['*'])
 let g:mplayer#engine = get(g:, 'mplayer#engine', has('job') || has('nvim') ? 'job' : 'vimproc')
 let g:mplayer#_use_timer = get(g:, 'mplayer#_use_timer', has('timers'))
+let g:mplayer#mru_size = get(g:, 'mplayer#mru_size', 999)
 let g:mplayer#tiemr_cycle = 1000
 
 let g:mplayer#enable_ctrlp_multi_select = get(g:, 'mplayer#enable_ctrlp_multi_select', 1)
 
 let s:V = vital#mplayer#new()
 let s:List = s:V.import('Data.List')
-let s:PM = s:V.import('ProcessManager')
+let s:PM = s:V.import('Deprecated.ProcessManager')
 
 if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
   let s:TENC = 'cp932'

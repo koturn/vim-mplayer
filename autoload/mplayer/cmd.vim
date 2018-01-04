@@ -11,7 +11,7 @@ set cpo&vim
 
 let s:V = vital#mplayer#new()
 let s:P = s:V.import('Process')
-let s:PM = s:V.import('ProcessManager')
+let s:PM = s:V.import('Deprecated.ProcessManager')
 let s:DUMMY_COMMAND = mplayer#_import_local_var('DUMMY_COMMAND')
 let s:LINE_BREAK = mplayer#_import_local_var('LINE_BREAK')
 let s:HELP_DICT = mplayer#complete#_import_local_var('HELP_DICT')
