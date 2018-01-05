@@ -239,6 +239,14 @@ function! mplayer#cmd#flush() abort
   endif
 endfunction
 
+function! mplayer#cmd#update_mru_list() abort
+  call s:mplayer.update_mru()
+endfunction
+
+function! mplayer#cmd#get_mru_list() abort
+  return s:mplayer.get_mru_list()
+endfunction
+
 
 function! s:show_timeinfo() abort
   let text = substitute(s:mplayer._command(join(['get_time_pos', 'get_time_length', 'get_percent_pos'], "\n")), "'", '', 'g')

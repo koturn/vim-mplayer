@@ -32,6 +32,7 @@ let g:mplayer#enable_ctrlp_multi_select = get(g:, 'mplayer#enable_ctrlp_multi_se
 let s:V = vital#mplayer#new()
 let s:List = s:V.import('Data.List')
 let s:PM = s:V.import('Deprecated.ProcessManager')
+let s:CacheFile = s:V.import('System.Cache').new('file', {'cache_dir': '~/.cache/vim-mplayer'})
 
 if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
   let s:TENC = 'cp932'
@@ -45,6 +46,8 @@ else
   let s:LINE_BREAK = "\n"
 endif
 lockvar s:LINE_BREAK
+
+let s:MRU_ID_BASE = 'mru'
 
 let s:DUMMY_COMMAND = 'get_property __NONE__'
 lockvar s:DUMMY_COMMAND
@@ -77,6 +80,9 @@ function! mplayer#new(...) abort
   let engine = a:0 > 0 ? a:1 : g:mplayer#engine
   let mplayer = extend(copy(s:MPlayer), mplayer#engine#{engine}#define())
   let mplayer.id = s:instance_id
+  let mplayer.mru_id = s:MRU_ID_BASE . s:instance_id
+  let s:mru_list = s:CacheFile.get(mplayer.mru_id)
+  let mplayer.mru_list = s:mru_list is# '' ? [] : s:mru_list
   let s:instance_id += 1
   call add(s:mplayer_list, mplayer)
 
@@ -108,13 +114,24 @@ function! s:MPlayer.enqueue(...) abort
   if !self.is_playing()
     call self.start('')
   endif
-  call self._write(join(extend(s:make_loadcmds(s:List.flatten(a:000)), [s:DUMMY_COMMAND, '']), "\n"))
+  let items = s:List.flatten(a:000)
+  let self.mru_list = s:List.uniq(extend(self.mru_list, items, 0)[: (g:mplayer#mru_size - 1)])
+  call self._write(join(extend(s:make_loadcmds(items), [s:DUMMY_COMMAND, '']), "\n"))
   call self._read()
+endfunction
+
+function! s:MPlayer.get_mru_list() abort
+  return copy(self.mru_list)
+endfunction
+
+function! s:MPlayer.update_mru_list() abort
+  return s:CacheFile.set(self.mru_id, self.mru_list)
 endfunction
 
 function! s:MPlayer.stop() abort
   if !self.is_playing() | return | endif
   call self._write("quit\n")
+  call self.update_mru_list()
 endfunction
 
 function! s:MPlayer.get_file_info() abort

@@ -92,6 +92,34 @@ let s:HELP_DICT = {
 lockvar s:HELP_DICT
 
 
+if exists('*getcompletion')
+  function! s:file_complete(arglead, cmdline, cursorpos) abort
+    let dirs = getcompletion(a:arglead, 'file')
+    let homedir = expand("~")
+    return a:arglead[0] ==# '~' ? map(dirs, 'substitute(v:val, "^" . homedir, "~", "")') : dirs
+  endfunction
+else
+  function! s:file_complete(arglead, cmdline, cursorpos) abort
+    if a:arglead ==# '~'
+      return [expand('~') . '/']
+    elseif a:arglead ==# ''
+      let files = map(split(globpath('./', '*'), "\n"),
+            \ 'fnameescape(v:val[2 :]) . (isdirectory(v:val) ? "/" : "")')
+    else
+      let files = map(split(expand(a:arglead . '*'), "\n"),
+            \ 'fnameescape(v:val) . (isdirectory(v:val) ? "/" : "")')
+    endif
+    if a:arglead[0] ==# '~'
+      let files = map(files, 'substitute(v:val, "^" . expand("~"), "~", "")')
+    endif
+    return s:match_filter(files, a:arglead)
+  endfunction
+endif
+
+
+function! mplayer#complete#file(arglead, cmdline, cursorpos) abort
+  return extend(s:file_complete(a:arglead, a:cmdline, a:cursorpos), mplayer#cmd#get_mru_list())
+endfunction
 
 function! mplayer#complete#cmd(arglead, cmdline, cursorpos) abort
   if !exists('s:cmd_complete_cache')
