@@ -30,6 +30,7 @@ function! s:MPlayerEngineVimproc.start(custom_option) abort
   call self.stop()
   let self.handle = 'mplayer-' . self.id
   call s:PM.touch(self.handle, join([self.mplayer, self.option, a:custom_option]))
+  sleep 100m
   call self._read()
 endfunction
 

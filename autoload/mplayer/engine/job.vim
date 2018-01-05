@@ -39,6 +39,7 @@ if has('nvim')
           \ 'on_stderr': function('s:on_stderr')
           \}
     let self.handle = jobstart(join([self.mplayer, self.option, a:custom_option]), self.jobopt)
+    sleep 100m
     call self._read()
   endfunction
 
@@ -82,6 +83,7 @@ else
     let self.handle = job_start(join([self.mplayer, self.option, a:custom_option]), {
           \ 'out_mode': 'raw'
           \})
+    sleep 100m
     call self._read()
   endfunction
 
