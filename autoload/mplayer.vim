@@ -24,7 +24,7 @@ endif
 let g:mplayer#suffixes = get(g:, 'mplayer#suffixes', ['*'])
 let g:mplayer#engine = get(g:, 'mplayer#engine', has('job') || has('nvim') ? 'job' : 'vimproc')
 let g:mplayer#_use_timer = get(g:, 'mplayer#_use_timer', has('timers'))
-let g:mplayer#mru_size = get(g:, 'mplayer#mru_size', 999)
+let g:mplayer#mru_size = get(g:, 'mplayer#mru_size', 100)
 let g:mplayer#tiemr_cycle = 1000
 
 let g:mplayer#enable_ctrlp_multi_select = get(g:, 'mplayer#enable_ctrlp_multi_select', 1)
@@ -32,7 +32,7 @@ let g:mplayer#enable_ctrlp_multi_select = get(g:, 'mplayer#enable_ctrlp_multi_se
 let s:V = vital#mplayer#new()
 let s:List = s:V.import('Data.List')
 let s:PM = s:V.import('Deprecated.ProcessManager')
-let s:CacheFile = s:V.import('System.Cache').new('file', {'cache_dir': '~/.cache/vim-mplayer'})
+let s:CacheFile = s:V.import('System.Cache').new('file', {'cache_dir': expand('~/.cache/vim-mplayer')})
 
 if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
   let s:TENC = 'cp932'
@@ -47,7 +47,7 @@ else
 endif
 lockvar s:LINE_BREAK
 
-let s:MRU_ID_BASE = 'mru'
+let s:MRU_ID_BASE = has('win32unix') ? 'mru_win32unix' : 'mru'
 
 let s:DUMMY_COMMAND = 'get_property __NONE__'
 lockvar s:DUMMY_COMMAND
@@ -74,6 +74,11 @@ let s:MPlayer = {
       \}
 let s:instance_id = 0
 let s:mplayer_list = []
+
+
+function! mplayer#get_suffix_globptn() abort
+  return empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
+endfunction
 
 
 function! mplayer#new(...) abort
@@ -106,15 +111,14 @@ function! s:MPlayer.play(...) abort
   endif
   let custom_option = join(a:000[pos + 1 :], ' ')
   call self.start(custom_option)
-  let filelist = a:000[: pos - 1]
-  call self.enqueue(filelist)
+  call self.enqueue(a:000[: pos - 1])
 endfunction
 
 function! s:MPlayer.enqueue(...) abort
   if !self.is_playing()
     call self.start('')
   endif
-  let items = s:List.flatten(a:000)
+  let items = s:get_media_items(s:List.flatten(a:000))
   let self.mru_list = s:List.uniq(extend(self.mru_list, items, 0)[: (g:mplayer#mru_size - 1)])
   call self._write(join(extend(s:make_loadcmds(items), [s:DUMMY_COMMAND, '']), "\n"))
   call self._read()
@@ -124,14 +128,15 @@ function! s:MPlayer.get_mru_list() abort
   return copy(self.mru_list)
 endfunction
 
-function! s:MPlayer.update_mru_list() abort
-  return s:CacheFile.set(self.mru_id, self.mru_list)
+function! s:MPlayer.update_mru_listfile() abort
+  call s:CacheFile.set(self.mru_id, filter(self.mru_list, 'filereadable(v:val) || v:val =~# "^\\%(cdda\\|cddb\\|dvd\\|file\\|ftp\\|gopher\\|tv\\|vcd\\|http\\|https\\)://"'))
+endfunction
 endfunction
 
 function! s:MPlayer.stop() abort
   if !self.is_playing() | return | endif
   call self._write("quit\n")
-  call self.update_mru_list()
+  call self.update_mru_listfile()
 endfunction
 
 function! s:MPlayer.get_file_info() abort
@@ -207,29 +212,27 @@ function! s:MPlayer.toggle_pause() abort
 endfunction
 
 
-function! s:make_loadcmds(args) abort
-  let [loadcmds, is_win_cygwin] = [[], has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin]
-  if is_win_cygwin
-    let cyg_subst_ptn = '^' . system('cygpath -u c:')[: -3] . '\(\a\)'
-  endif
-  let glob_ptn = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
+function! s:get_media_items(args) abort
+  let [items, globptn] = [[], mplayer#get_suffix_globptn()]
   for arg in a:args
     for item in split(expand(arg, 1), "\n")
-      if item =~# '^\%(cdda\|cddb\|dvd\|file\|ftp\|gopher\|tv\|vcd\|http\|https\)://'
-        call add(loadcmds, 'loadfile ' . item . ' 1')
-      else
-        let item = is_win_cygwin ? substitute(item, cyg_subst_ptn, '\1:', '') : item
-        let _ = isdirectory(item)
-              \ ? extend(loadcmds, map(filter(split(globpath(item, glob_ptn, 1), "\n"), 'filereadable(v:val)'), 's:process_file(v:val)'))
-              \ : add(loadcmds, s:process_file(expand(item, 1)))
+      if filereadable(item) || item =~# '^\%(cdda\|cddb\|dvd\|file\|ftp\|gopher\|tv\|vcd\|http\|https\)://'
+        call add(items, fnamemodify(item, ':p'))
+      elseif isdirectory(item)
+        call extend(items, map(filter(split(globpath(item, globptn, 1), "\n"), 'filereadable(v:val)'), 'fnamemodify(v:val, ":p")'))
       endif
     endfor
   endfor
-  return loadcmds
+  return items
 endfunction
 
-function! s:process_file(file) abort
-  return (a:file =~# '\.\%(m3u\|m3u8\|pls\|wax\|wpl\|xspf\)$' ? 'loadlist ' : 'loadfile ') . string(a:file) . ' 1'
+function! s:make_loadcmds(items) abort
+  if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
+    let cyg_subst_ptn = '^' . system('cygpath -u c:')[: -3] . '\(\a\)'
+    return map(a:items, '(v:val =~# "\\.\\%(m3u\\|m3u8\\|pls\\|wax\\|wpl\\|xspf\\)$" ? "loadlist " : "loadfile \"") . substitute(v:val, cyg_subst_ptn, "\\1:", "") . "\" 1"')
+  else
+    return map(a:items, '(v:val =~# "\\.\\%(m3u\\|m3u8\\|pls\\|wax\\|wpl\\|xspf\\)$" ? "loadlist " : "loadfile \"") . v:val . "\" 1"')
+  endif
 endfunction
 
 function! s:get_file_info(text) abort
