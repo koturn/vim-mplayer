@@ -51,8 +51,8 @@ function! s:source.gather_candidates(args, context) abort
     let s:dir .= '/'
   endif
   let len = len(s:dir)
-  let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
-  let gp = s:has_704_279 ? globpath(s:dir . '**', glob_pattern, 1, 1) : split(globpath(s:dir . '**', glob_pattern, 1), "\n")
+  let globptn = mplayer#get_suffix_globptn()
+  let gp = s:has_704_279 ? globpath(s:dir . '**', globptn, 1, 1) : split(globpath(s:dir . '**', globptn, 1), "\n")
   return map(gp, '{
         \ "action__path": v:val,
         \ "word": v:val[len :],

@@ -1,5 +1,5 @@
 " ============================================================================
-" FILE: mplayer.vim
+" FILE: mplayer_mru.vim
 " AUTHOR: koturn <jeak.koutan.apple@gmail.com>
 " DESCRIPTION: {{{
 " A mplayer frontend for Vim.
@@ -7,14 +7,14 @@
 " ctrlp.vim: https://github.com/ctrlpvim/ctrlp.vim
 " }}}
 " ============================================================================
-if exists('g:loaded_ctrlp_mplayer') && g:loaded_ctrlp_mplayer
+if exists('g:loaded_ctrlp_mplayer_mru') && g:loaded_ctrlp_mplayer_mru
   finish
 endif
-let g:loaded_ctrlp_mplayer = 1
+let g:loaded_ctrlp_mplayer_mru = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
-augroup MPlayerCtrlP
+augroup MPlayerMruCtrlP
   autocmd!
 augroup END
 
@@ -30,8 +30,8 @@ let g:ctrlp_ext_vars = add(get(g:, 'ctrlp_ext_vars', []), {
       \ 'init': s:sid_prefix  . 'init()',
       \ 'accept': s:sid_prefix  . 'accept',
       \ 'exit': s:sid_prefix  . 'exit()',
-      \ 'lname': 'mplayer',
-      \ 'sname': 'mplayer',
+      \ 'lname': 'mplayer_mru',
+      \ 'sname': 'mplayer_mru',
       \ 'type': 'path',
       \ 'sort': 0,
       \ 'nolim': 1,
@@ -41,7 +41,7 @@ let s:id = s:ctrlp_builtins + len(g:ctrlp_ext_vars)
 unlet s:ctrlp_builtins s:sid_prefix
 
 
-function! ctrlp#mplayer#start(...) abort
+function! ctrlp#mplayer_mru#start(...) abort
   let s:dir = expand(a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/'))
   if s:dir[-1 :] !=# '/'
     let s:dir .= '/'
@@ -51,13 +51,12 @@ endfunction
 
 
 function! s:init() abort
-  let globptn = mplayer#get_suffix_globptn()
+  let glob_pattern = empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
   if g:mplayer#enable_ctrlp_multi_select
-    autocmd! MPlayerCtrlP BufReadCmd
-    execute 'autocmd MPlayerCtrlP BufReadCmd' globptn 'call s:enqueue_hook()'
+    autocmd! MPlayerMruCtrlP BufReadCmd
+    execute 'autocmd MPlayerMruCtrlP BufReadCmd' glob_pattern 'call s:enqueue_hook()'
   endif
-  let len = len(s:dir)
-  return map(split(globpath(s:dir . '**', globptn, 1), "\n"), 'v:val[len :]')
+  return mplayer#cmd#get_mru_list()
 endfunction
 
 function! s:accept(mode, str) abort
@@ -67,7 +66,7 @@ endfunction
 
 function! s:exit() abort
   if g:mplayer#enable_ctrlp_multi_select
-    autocmd MPlayerCtrlP CursorHold,CursorHoldI,CursorMoved,CursorMovedI,InsertEnter * call s:delete_autocmds_hook()
+    autocmd MPlayerMruCtrlP CursorHold,CursorHoldI,CursorMoved,CursorMovedI,InsertEnter * call s:delete_autocmds_hook()
   endif
 endfunction
 
@@ -78,10 +77,11 @@ function! s:enqueue_hook() abort
 endfunction
 
 function! s:delete_autocmds_hook() abort
-  autocmd! MPlayerCtrlP CursorHold,CursorHoldI,CursorMoved,CursorMovedI,InsertEnter *
-  autocmd! MPlayerCtrlP BufReadCmd
+  autocmd! MPlayerMruCtrlP CursorHold,CursorHoldI,CursorMoved,CursorMovedI,InsertEnter *
+  autocmd! MPlayerMruCtrlP BufReadCmd
 endfunction
 
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
+

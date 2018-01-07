@@ -1,5 +1,5 @@
 " ============================================================================
-" FILE: mplayer.vim
+" FILE: mplayer_mru.vim
 " AUTHOR: koturn <jeak.koutan.apple@gmail.com>
 " DESCRIPTION: {{{
 " A mplayer frontend for Vim.
@@ -11,24 +11,19 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
-let s:define = {'name': 'mplayer'}
+let s:define = {'name': 'mplayer_mru'}
 
 function! s:define.init(context) abort
-  let len = len(s:dir)
-  return map(split(globpath(s:dir . '**', mplayer#get_suffix_globptn(), 1), "\n"), 'v:val[len :]')
+  return mplayer#cmd#get_mru_list()
 endfunction
 
 function! s:define.accept(context, candidate) abort
   call milqi#exit()
-  call mplayer#cmd#enqueue(s:dir . a:candidate)
+  call mplayer#cmd#enqueue(a:candidate)
 endfunction
 
 
-function! milqi#mplayer#start(...) abort
-  let s:dir = expand(a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/'))
-  if s:dir[-1 :] !=# '/'
-    let s:dir .= '/'
-  endif
+function! milqi#mplayer_mru#start(...) abort
   call milqi#candidate_first(s:define)
 endfunction
 

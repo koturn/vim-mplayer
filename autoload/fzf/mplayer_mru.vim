@@ -1,5 +1,5 @@
 " ============================================================================
-" FILE: mplayer.vim
+" FILE: mplayer_mru.vim
 " AUTHOR: koturn <jeak.koutan.apple@gmail.com>
 " DESCRIPTION: {{{
 " A mplayer frontend for Vim.
@@ -22,22 +22,17 @@ let s:option = {
       \}
 
 
-function! fzf#mplayer#start(...) abort
+function! fzf#mplayer_mru#start(...) abort
   let dir = expand(a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/'))
   if dir[-1 :] !=# '/'
     let dir .= '/'
   endif
-  let s:option.source = s:gather_candidates(dir)
+  let s:option.source = mplayer#cmd#get_mru_list()
   let s:option.dir = dir
   call fzf#run(s:option)
 endfunction
 
 
-function! s:gather_candidates(dir) abort
-  let len = len(a:dir)
-  return map(split(globpath(a:dir . '**', mplayer#get_suffix_globptn(), 1), "\n"), 'v:val[len :]')
-endfunction
-
-
 let &cpo = s:save_cpo
 unlet s:save_cpo
+

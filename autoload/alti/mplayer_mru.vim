@@ -1,5 +1,5 @@
 " ============================================================================
-" FILE: mplayer.vim
+" FILE: mplayer_mru.vim
 " AUTHOR: koturn <jeak.koutan.apple@gmail.com>
 " DESCRIPTION: {{{
 " A mplayer frontend for Vim.
@@ -17,26 +17,20 @@ endfunction
 let s:sid_prefix = '<SNR>' . s:get_sid() . '_'
 delfunction s:get_sid
 let s:define = {
-      \ 'name': 'mplayer',
+      \ 'name': 'mplayer_mru',
       \ 'enter': s:sid_prefix . 'enter',
       \ 'cmpl': s:sid_prefix . 'cmpl',
       \ 'prompt': s:sid_prefix . 'prompt',
       \ 'submitted': s:sid_prefix . 'submitted',
       \}
 
-function! alti#mplayer#start(...) abort
-  let s:dir = expand(a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/'))
-  if s:dir[-1 :] !=# '/'
-    let s:dir .= '/'
-  endif
-  let s:define.static_head = s:dir
+function! alti#mplayer_mru#start(...) abort
   call alti#init(s:define)
 endfunction
 
 
 function! s:enter() abort dict
-  let len = len(s:dir)
-  let self.candidates = map(split(globpath(s:dir . '**', mplayer#get_suffix_globptn(), 1), "\n"), 'v:val[len :]')
+  let self.candidates = mplayer#cmd#get_mru_list()
 endfunction
 
 function! s:cmpl(context) abort dict
@@ -44,12 +38,11 @@ function! s:cmpl(context) abort dict
 endfunction
 
 function! s:prompt(context) abort
-  return 'MPlayer> '
+  return 'MPlayerMru> '
 endfunction
 
 function! s:submitted(context, line) abort
-  call mplayer#cmd#enqueue(len(a:context.inputs) == 0 ?
-        \ (s:dir . a:context.selection) : map(a:context.inputs, 's:dir . v:val'))
+  call mplayer#cmd#enqueue(len(a:context.inputs) == 0 ? a:context.selection : a:context.inputs)
 endfunction
 
 

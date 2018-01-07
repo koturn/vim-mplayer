@@ -1,5 +1,5 @@
 """
-FILE: mplayer.vim
+FILE: mplayer.py
 AUTHOR: koturn <jeak.koutan.apple@gmail.com>
 DESCRIPTION: {{{
 Mplayer frontend of Vim.

@@ -47,9 +47,13 @@ command! -bar -nargs=? -complete=customlist,mplayer#complete#help  MPlayerHelp c
 command! -bar -nargs=0 MPlayerFlush call mplayer#cmd#flush()
 
 command! -nargs=? -complete=dir CtrlPMPlayer  call ctrlp#mplayer#start(<f-args>)
+command! -nargs=0 CtrlPMPlayerMru  call ctrlp#mplayer_mru#start()
 command! -nargs=? -complete=dir AltiMPlayer  call alti#mplayer#start(<f-args>)
+command! -nargs=0 AltiMPlayerMru  call alti#mplayer_mru#start()
 command! -nargs=? -complete=dir MilqiMPlayer  call milqi#mplayer#start(<f-args>)
+command! -nargs=0 MilqiMPlayerMru  call milqi#mplayer_mru#start()
 command! -nargs=? -complete=dir FZFMPlayer  call fzf#mplayer#start(<f-args>)
+command! -nargs=0 FZFMPlayerMru  call fzf#mplayer_mru#start()
 
 
 let &cpo = s:save_cpo

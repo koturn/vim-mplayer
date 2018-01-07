@@ -21,30 +21,35 @@ Playlist file is detected by the extension of the file name.
 
 The following table is the command list of this plugin.
 
-Command                                              | Description
------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------
-`MPlayer <file or directory> ...`                    | Play back specified files.
-`MPlayerEnqueue <file or directory> ...`             | Add the files to the current playlist.
-`MPlayerCommand <arg> ...`                           | Send slave mode commands to the mplayer.
-`MPlayerEqualizer <preset name or band string>`      | Set the equalizer of the mplayer.
-`MPlayerGetProperty <property>`                      | Print out the current value of a property.
-`MPlayerLoop <the number of loop>`                   | Specify the number of loop. 0 means infinite loop, -1 means no loop.
-`MPlayerNext`                                        | Move to the next music/movie of the current playlist.
-`MPlayerOperateWithKey`                              | Operate the mplayer with keyboard inputs.
-`MPlayerPrev`                                        | Move to the previous music/movie of the current playlist.
-`MPlayerSeek <position>`                             | Seek to the specified position. Argument format is `.*%` (percent based position) or `.*s` (seconds based position)
-`MPlayerSeekToEnd`                                   | Seek to the end of file.
-`MPlayerSeekToHead`                                  | Seek to the head of file.
-`MPlayerSetProperty <property> <values> ...`         | Set a value to the specified property.
-`MPlayerShowCommandList`                             | Show slave mode commands.
-`MPlayerShowFileInfo`                                | Show the file information of the song which currently playing.
-`MPlayerSpeed <value>`                               | Set the play speed of the mplayer. When bang is added, don't keep pitch.
-`MPlayerStepProperty <property> <value> <direction>` | Change a property by value, or increase by a default if value is not given or zero.
-`MPlayerStop`                                        | Stop the mplayer (kill process of the mplayer)
-`MPlayerToggleMute`                                  | Toggle mute or not.
-`MPlayerTogglePause`                                 | Toggle pause-state or not.
-`MPlayerToggleRTTimeInfo`                            | Toggle successively show or not show playback time.
-`MPlayerVolume <value>`                              | Set the volume of the mplayer.
+Command                                                     | Description
+------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------
+`MPlayer <file or directory> ...`                           | Play back specified files.
+`MPlayerEnqueue <file or directory> ...`                    | add the files to the current playlist.
+`MPlayerMru <file or directory from MRU list> ...`          | Play back specified files in MRU list.
+`MPlayerMruEnqueue <file or directory from MRU list> ...`   | Add the files in MRU list to the current playlist.
+`MPlayerMruUpdate`                                          | Write current MRU list to the MRU cache file.
+`MPlayerMruReload`                                          | Reload MRU list from MRU cache file.
+`MPlayerMruClear`                                           | Clear MRU cahce file.
+`MPlayerCommand <arg> ...`                                  | Send slave mode commands to the mplayer.
+`MPlayerEqualizer <preset name or band string>`             | Set the equalizer of the mplayer.
+`MPlayerGetProperty <property>`                             | Print out the current value of a property.
+`MPlayerLoop <the number of loop>`                          | Specify the number of loop. 0 means infinite loop, -1 means no loop.
+`MPlayerNext`                                               | Move to the next music/movie of the current playlist.
+`MPlayerOperateWithKey`                                     | Operate the mplayer with keyboard inputs.
+`MPlayerPrev`                                               | Move to the previous music/movie of the current playlist.
+`MPlayerSeek <position>`                                    | Seek to the specified position. Argument format is `.*%` (percent based position) or `.*s` (seconds based position)
+`MPlayerSeekToEnd`                                          | Seek to the end of file.
+`MPlayerSeekToHead`                                         | Seek to the head of file.
+`MPlayerSetProperty <property> <values> ...`                | Set a value to the specified property.
+`MPlayerShowCommandList`                                    | Show slave mode commands.
+`MPlayerShowFileInfo`                                       | Show the file information of the song which currently playing.
+`MPlayerSpeed <value>`                                      | Set the play speed of the mplayer. When bang is added, don't keep pitch.
+`MPlayerStepProperty <property> <value> <direction>`        | Change a property by value, or increase by a default if value is not given or zero.
+`MPlayerStop`                                               | Stop the mplayer (kill process of the mplayer)
+`MPlayerToggleMute`                                         | Toggle mute or not.
+`MPlayerTogglePause`                                        | Toggle pause-state or not.
+`MPlayerToggleRTTimeInfo`                                   | Toggle successively show or not show playback time.
+`MPlayerVolume <value>`                                     | Set the volume of the mplayer.
 
 
 ## Installation
@@ -82,6 +87,11 @@ call dein#add('koturn/vim-mplayer', {
       \   'FZFMPlayer',
       \   'MPlayer',
       \   'MPlayerEnqueue',
+      \   'MPlayerMru',
+      \   'MPlayerMruEnqueue',
+      \   'MPlayerMruUpdate',
+      \   'MPlayerMruReload',
+      \   'MPlayerMruClear',
       \   'MPlayerCommand',
       \   'MPlayerStop',
       \   'MPlayerVolume',
@@ -138,6 +148,11 @@ NeoBundle 'koturn/vim-mplayer', {
       \   'FZFMPlayer',
       \   'MPlayer',
       \   'MPlayerEnqueue',
+      \   'MPlayerMru',
+      \   'MPlayerMruEnqueue',
+      \   'MPlayerMruUpdate',
+      \   'MPlayerMruReload',
+      \   'MPlayerMruClear',
       \   'MPlayerCommand',
       \   'MPlayerStop',
       \   'MPlayerVolume',
