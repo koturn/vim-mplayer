@@ -13,8 +13,13 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
-command! -bar -nargs=+ -complete=customlist,mplayer#complete#file MPlayer call mplayer#cmd#play(<f-args>)
-command! -bar -nargs=+ -complete=customlist,mplayer#complete#file MPlayerEnqueue call mplayer#cmd#enqueue(<f-args>)
+command! -bar -nargs=+ -complete=file MPlayer call mplayer#cmd#play(<f-args>)
+command! -bar -nargs=+ -complete=file MPlayerEnqueue call mplayer#cmd#enqueue(<f-args>)
+command! -bar -nargs=+ -complete=customlist,mplayer#complete#mru MPlayerMru call mplayer#cmd#play(<f-args>)
+command! -bar -nargs=+ -complete=customlist,mplayer#complete#mru MPlayerMruEnqueue call mplayer#cmd#enqueue(<f-args>)
+command! -bar -nargs=0 MPlayerMruUpdate call mplayer#cmd#update_mru_listfile()
+command! -bar -nargs=0 MPlayerMruReload call mplayer#cmd#reload_mru_listfile()
+command! -bar -nargs=0 MPlayerMruClear call mplayer#cmd#clear_mru_listfile()
 command! -bar -nargs=0 MPlayerStop call mplayer#cmd#stop()
 command! -bar -nargs=0 MPlayerKill call mplayer#cmd#kill()
 command! -bar -nargs=1 MPlayerVolume call mplayer#cmd#set_volume(<f-args>)

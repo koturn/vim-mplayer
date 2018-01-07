@@ -131,6 +131,15 @@ endfunction
 function! s:MPlayer.update_mru_listfile() abort
   call s:CacheFile.set(self.mru_id, filter(self.mru_list, 'filereadable(v:val) || v:val =~# "^\\%(cdda\\|cddb\\|dvd\\|file\\|ftp\\|gopher\\|tv\\|vcd\\|http\\|https\\)://"'))
 endfunction
+
+function! s:MPlayer.reload_mru_listfile() abort
+  let s:mru_list = s:CacheFile.get(self.mru_id)
+  let self.mru_list = s:mru_list is# '' ? [] : s:mru_list
+endfunction
+
+function! s:MPlayer.clear_mru_listfile() abort
+  call s:CacheFile.set(self.mru_id, [])
+  let self.mru_list = []
 endfunction
 
 function! s:MPlayer.stop() abort

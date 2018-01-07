@@ -239,12 +239,20 @@ function! mplayer#cmd#flush() abort
   endif
 endfunction
 
-function! mplayer#cmd#update_mru_list() abort
-  call s:mplayer.update_mru()
-endfunction
-
 function! mplayer#cmd#get_mru_list() abort
   return s:mplayer.get_mru_list()
+endfunction
+
+function! mplayer#cmd#update_mru_listfile() abort
+  call s:mplayer.update_mru_listfile()
+endfunction
+
+function! mplayer#cmd#reload_mru_listfile() abort
+  call s:mplayer.reload_mru_listfile()
+endfunction
+
+function! mplayer#cmd#clear_mru_listfile() abort
+  call s:mplayer.clear_mru_listfile()
 endfunction
 
 
