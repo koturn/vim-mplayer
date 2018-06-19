@@ -31,7 +31,6 @@ let g:mplayer#enable_ctrlp_multi_select = get(g:, 'mplayer#enable_ctrlp_multi_se
 
 let s:V = vital#mplayer#new()
 let s:List = s:V.import('Data.List')
-let s:PM = s:V.import('Deprecated.ProcessManager')
 let s:CacheFile = s:V.import('System.Cache').new('file', {'cache_dir': expand('~/.cache/vim-mplayer')})
 
 if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
