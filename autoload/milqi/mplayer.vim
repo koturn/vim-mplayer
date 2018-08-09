@@ -13,24 +13,24 @@ set cpo&vim
 
 let s:define = {'name': 'mplayer'}
 
-function! s:define.init(context) abort
+function! s:define.init(context) abort " {{{
   let len = len(s:dir)
   return map(split(globpath(s:dir . '**', mplayer#get_suffix_globptn(), 1), "\n"), 'v:val[len :]')
-endfunction
+endfunction " }}}
 
-function! s:define.accept(context, candidate) abort
+function! s:define.accept(context, candidate) abort " {{{
   call milqi#exit()
   call mplayer#cmd#enqueue(s:dir . a:candidate)
-endfunction
+endfunction " }}}
 
 
-function! milqi#mplayer#start(...) abort
+function! milqi#mplayer#start(...) abort " {{{
   let s:dir = expand(a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/'))
   if s:dir[-1 :] !=# '/'
     let s:dir .= '/'
   endif
   call milqi#candidate_first(s:define)
-endfunction
+endfunction " }}}
 
 
 let &cpo = s:save_cpo

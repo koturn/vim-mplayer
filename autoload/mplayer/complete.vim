@@ -8,10 +8,12 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
+" {{{ import vital.vim library
 let s:P = vital#mplayer#new().import('Process')
 let s:List = vital#mplayer#new().import('Data.List')
+" }}}
 
-let s:eq_presets = {
+let s:eq_presets = { " {{{
       \ 'acoustic': '0:1:2:0:0:0:0:0:2:2',
       \ 'bass': '3:2:1:0:-1:-2:-3:-4:-5:-6',
       \ 'blues': '-1:0:2:1:0:0:0:0:-1:-3',
@@ -37,8 +39,9 @@ let s:eq_presets = {
       \ 'speech': '-2:0:2:1:0:0:0:0:-2:-5',
       \ 'swing': '-2:-1:-1:-1:2:2:-1:1:3:3',
       \ 'techno': '-8:-1:2:-3:-3:-4:-2:-2:3:3',
-      \}
+      \} " }}}
 
+" {{{ Constants
 let s:SUB_ARG_DICT = {}
 let s:SUB_ARG_DICT.dvdnav = sort([
       \ 'up', 'down', 'left', 'right',
@@ -91,13 +94,14 @@ let s:HELP_DICT = {
       \ 'vo': '-vo help'
       \}
 lockvar s:HELP_DICT
+" }}}
 
 
-function! mplayer#complete#mru(arglead, cmdline, cursorpos) abort
+function! mplayer#complete#mru(arglead, cmdline, cursorpos) abort " {{{
   return map(s:match_filter(mplayer#cmd#get_mru_list(), expand(a:arglead)), 'fnameescape(v:val)')
-endfunction
+endfunction " }}}
 
-function! mplayer#complete#cmd(arglead, cmdline, cursorpos) abort
+function! mplayer#complete#cmd(arglead, cmdline, cursorpos) abort " {{{
   if !exists('s:cmd_complete_cache')
     let cmdlist = s:P.system(g:mplayer#mplayer . ' -input cmdlist')
     let s:cmd_complete_cache = sort(map(split(cmdlist, "\n"), 'split(v:val, " \\+")[0]'))
@@ -113,44 +117,44 @@ function! mplayer#complete#cmd(arglead, cmdline, cursorpos) abort
     let candidates = s:cmd_complete_cache
   endif
   return s:match_filter(copy(candidates), a:arglead)
-endfunction
+endfunction " }}}
 
-function! mplayer#complete#step_property(arglead, cmdline, cursorpos) abort
+function! mplayer#complete#step_property(arglead, cmdline, cursorpos) abort " {{{
   return s:first_arg_complete(copy(s:SUB_ARG_DICT.step_property), a:arglead, a:cmdline)
-endfunction
+endfunction " }}}
 
-function! mplayer#complete#get_property(arglead, cmdline, cursorpos) abort
+function! mplayer#complete#get_property(arglead, cmdline, cursorpos) abort " {{{
   return s:first_arg_complete(copy(s:SUB_ARG_DICT.get_property), a:arglead, a:cmdline)
-endfunction
+endfunction " }}}
 
-function! mplayer#complete#set_property(arglead, cmdline, cursorpos) abort
+function! mplayer#complete#set_property(arglead, cmdline, cursorpos) abort " {{{
   return s:first_arg_complete(copy(s:SUB_ARG_DICT.set_property), a:arglead, a:cmdline)
-endfunction
+endfunction " }}}
 
-function! mplayer#complete#equlizer(arglead, cmdline, cursorpos) abort
+function! mplayer#complete#equlizer(arglead, cmdline, cursorpos) abort " {{{
   return s:first_arg_complete(sort(keys(s:eq_presets)), a:arglead, a:cmdline)
-endfunction
+endfunction " }}}
 
-function! mplayer#complete#help(arglead, cmdline, cursorpos) abort
+function! mplayer#complete#help(arglead, cmdline, cursorpos) abort " {{{
   return s:first_arg_complete(sort(keys(s:HELP_DICT)), a:arglead, a:cmdline)
-endfunction
+endfunction " }}}
 
-function! mplayer#complete#_import_local_var(name) abort
+function! mplayer#complete#_import_local_var(name) abort " {{{
   return s:[a:name]
-endfunction
+endfunction " }}}
 
 
-function! s:first_arg_complete(candidates, arglead, cmdline) abort
+function! s:first_arg_complete(candidates, arglead, cmdline) abort " {{{
   let nargs = len(split(split(a:cmdline, '[^\\]\zs|')[-1], '\s\+'))
   if nargs == 1 || (nargs == 2 && a:arglead !=# '')
     return s:match_filter(a:candidates, a:arglead)
   endif
-endfunction
+endfunction " }}}
 
-function! s:match_filter(candidates, arglead) abort
+function! s:match_filter(candidates, arglead) abort " {{{
   let arglead = tolower(a:arglead)
   return filter(a:candidates, '!stridx(tolower(v:val), arglead)')
-endfunction
+endfunction " }}}
 
 
 let &cpo = s:save_cpo

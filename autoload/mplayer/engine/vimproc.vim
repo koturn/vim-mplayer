@@ -8,19 +8,23 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-
+" {{{ import vital.vim library
 let s:PM = vital#mplayer#new().import('ProcessManager')
+" }}}
 
+" {{{ Constants
 let s:WAIT_TIME = 0.05
-let s:MPlayerEngineVimproc = {}
+" }}}
 
 
-function! mplayer#engine#vimproc#define() abort
+function! mplayer#engine#vimproc#define() abort " {{{
   return copy(s:MPlayerEngineVimproc)
-endfunction
+endfunction " }}}
 
 
-function! s:MPlayerEngineVimproc.start(custom_option) abort
+let s:MPlayerEngineVimproc = {} " {{{
+
+function! s:MPlayerEngineVimproc.start(custom_option) abort " {{{
   if !executable(self.mplayer)
     throw '[vim-mplayer] Please install mplayer'
   endif
@@ -32,35 +36,36 @@ function! s:MPlayerEngineVimproc.start(custom_option) abort
   call s:PM.touch(self.handle, join([self.mplayer, self.option, a:custom_option]))
   sleep 100m
   call self._read()
-endfunction
+endfunction " }}}
 
-function! s:MPlayerEngineVimproc.kill(custom_option) abort
+function! s:MPlayerEngineVimproc.kill(custom_option) abort " {{{
   if !self.is_playing() | return | endif
   call s:PM.kill(self.handle)
-endfunction
+endfunction " }}}
 
-function! s:MPlayerEngineVimproc.is_playing() abort
+function! s:MPlayerEngineVimproc.is_playing() abort " {{{
   try
     let status = s:PM.status(self.handle)
     return status ==# 'inactive' || status ==# 'active'
   catch
     return 0
   endtry
-endfunction
+endfunction " }}}
 
-function! s:MPlayerEngineVimproc._read(...) abort
+function! s:MPlayerEngineVimproc._read(...) abort " {{{
   let wait_time = a:0 > 0 ? a:1 : s:WAIT_TIME
   return s:PM.read_wait(self.handle, wait_time, [])[0]
-endfunction
+endfunction " }}}
 
-function! s:MPlayerEngineVimproc._write(text) abort
+function! s:MPlayerEngineVimproc._write(text) abort " {{{
   call s:PM.write(self.handle, a:text)
-endfunction
+endfunction " }}}
 
-function! s:MPlayerEngineVimproc.flush() abort
+function! s:MPlayerEngineVimproc.flush() abort " {{{
   if !self.is_playing() | return | endif
   return s:PM.read(self.handle, [])
-endfunction
+endfunction " }}}
+" }}}
 
 
 let &cpo = s:save_cpo

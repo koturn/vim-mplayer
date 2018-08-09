@@ -11,9 +11,9 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
-function! s:sink(candidates) abort
+function! s:sink(candidates) abort " {{{
   call mplayer#cmd#enqueue(a:candidates)
-endfunction
+endfunction " }}}
 
 let s:option = {
       \ 'sink*': function('s:sink'),
@@ -22,7 +22,7 @@ let s:option = {
       \}
 
 
-function! fzf#mplayer_mru#start(...) abort
+function! fzf#mplayer_mru#start(...) abort " {{{
   let dir = expand(a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/'))
   if dir[-1 :] !=# '/'
     let dir .= '/'
@@ -30,7 +30,7 @@ function! fzf#mplayer_mru#start(...) abort
   let s:option.source = mplayer#cmd#get_mru_list()
   let s:option.dir = dir
   call fzf#run(s:option)
-endfunction
+endfunction " }}}
 
 
 let &cpo = s:save_cpo

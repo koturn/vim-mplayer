@@ -11,11 +11,13 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
-function! s:get_sid_prefix() abort
+" {{{ Get SID prefix
+function! s:get_sid_prefix() abort " {{{
   return matchstr(expand('<sfile>'), '^function \zs<SNR>\d\+_\zeget_sid_prefix$')
-endfunction
+endfunction " }}}
 let s:sid_prefix = s:get_sid_prefix()
 delfunction s:get_sid_prefix
+" }}}
 
 let s:define = {
       \ 'name': 'mplayer_mru',
@@ -26,26 +28,26 @@ let s:define = {
       \}
 unlet s:sid_prefix
 
-function! alti#mplayer_mru#start(...) abort
+function! alti#mplayer_mru#start(...) abort " {{{
   call alti#init(s:define)
-endfunction
+endfunction " }}}
 
 
-function! s:enter() abort dict
+function! s:enter() abort dict " {{{
   let self.candidates = mplayer#cmd#get_mru_list()
-endfunction
+endfunction " }}}
 
-function! s:cmpl(context) abort dict
+function! s:cmpl(context) abort dict " {{{
   return a:context.fuzzy_filtered(self.candidates)
-endfunction
+endfunction " }}}
 
-function! s:prompt(context) abort
+function! s:prompt(context) abort " {{{
   return 'MPlayerMru> '
-endfunction
+endfunction " }}}
 
-function! s:submitted(context, line) abort
+function! s:submitted(context, line) abort " {{{
   call mplayer#cmd#enqueue(len(a:context.inputs) == 0 ? a:context.selection : a:context.inputs)
-endfunction
+endfunction " }}}
 
 
 let &cpo = s:save_cpo

@@ -9,6 +9,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
+" {{{ Global variables
 if has('win32unix')
   let g:mplayer#use_win_mplayer_in_cygwin = get(g:, 'mplayer#use_win_mplayer_in_cygwin', 0)
 endif
@@ -26,13 +27,16 @@ let g:mplayer#engine = get(g:, 'mplayer#engine', has('job') || has('nvim') ? 'jo
 let g:mplayer#_use_timer = get(g:, 'mplayer#_use_timer', has('timers'))
 let g:mplayer#mru_size = get(g:, 'mplayer#mru_size', 100)
 let g:mplayer#tiemr_cycle = 1000
-
 let g:mplayer#enable_ctrlp_multi_select = get(g:, 'mplayer#enable_ctrlp_multi_select', 1)
+" }}}
 
+" {{{ import vital.vim library
 let s:V = vital#mplayer#new()
 let s:List = s:V.import('Data.List')
 let s:CacheFile = s:V.import('System.Cache').new('file', {'cache_dir': expand('~/.cache/vim-mplayer')})
+" }}}
 
+" {{{ Constants
 if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
   let s:TENC = 'cp932'
 else
@@ -65,6 +69,7 @@ lockvar s:INFO_COMMANDS
 let s:eq_presets = mplayer#complete#_import_local_var('eq_presets')
 let s:SUB_ARG_DICT = mplayer#complete#_import_local_var('SUB_ARG_DICT')
 let s:HELP_DICT = mplayer#complete#_import_local_var('HELP_DICT')
+" }}}
 
 
 let s:MPlayer = {
@@ -75,12 +80,12 @@ let s:instance_id = 0
 let s:mplayer_list = []
 
 
-function! mplayer#get_suffix_globptn() abort
+function! mplayer#get_suffix_globptn() abort " {{{
   return empty(g:mplayer#suffixes) ? '*' : ('*.{' . join(g:mplayer#suffixes, ',') . '}')
-endfunction
+endfunction " }}}
 
 
-function! mplayer#new(...) abort
+function! mplayer#new(...) abort " {{{
   let engine = a:0 > 0 ? a:1 : g:mplayer#engine
   let mplayer = extend(copy(s:MPlayer), mplayer#engine#{engine}#define())
   let mplayer.id = s:instance_id
@@ -96,14 +101,14 @@ function! mplayer#new(...) abort
   execute '  autocmd' group 'VimLeave * call s:mplayer_list[' . mplayer.id . '].stop()'
   execute 'augroup END'
   return mplayer
-endfunction
+endfunction " }}}
 
-function! mplayer#_import_local_var(name) abort
+function! mplayer#_import_local_var(name) abort " {{{
   return s:[a:name]
-endfunction
+endfunction " }}}
 
 
-function! s:MPlayer.play(...) abort
+function! s:MPlayer.play(...) abort " {{{
   let pos = match(a:000, '^--$')
   if pos == -1
     let pos = a:0
@@ -111,9 +116,9 @@ function! s:MPlayer.play(...) abort
   let custom_option = join(a:000[pos + 1 :], ' ')
   call self.start(custom_option)
   call self.enqueue(a:000[: pos - 1])
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.enqueue(...) abort
+function! s:MPlayer.enqueue(...) abort " {{{
   if !self.is_playing()
     call self.start('')
   endif
@@ -121,106 +126,106 @@ function! s:MPlayer.enqueue(...) abort
   let self.mru_list = s:List.uniq(extend(self.mru_list, items, 0)[: (g:mplayer#mru_size - 1)])
   call self._write(join(extend(s:make_loadcmds(items), [s:DUMMY_COMMAND, '']), "\n"))
   call self._read()
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.get_mru_list() abort
+function! s:MPlayer.get_mru_list() abort " {{{
   return copy(self.mru_list)
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.update_mru_listfile() abort
+function! s:MPlayer.update_mru_listfile() abort " {{{
   call s:CacheFile.set(self.mru_id, filter(self.mru_list, 'filereadable(v:val) || v:val =~# "^\\%(cdda\\|cddb\\|dvd\\|file\\|ftp\\|gopher\\|tv\\|vcd\\|http\\|https\\)://"'))
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.reload_mru_listfile() abort
+function! s:MPlayer.reload_mru_listfile() abort " {{{
   let s:mru_list = s:CacheFile.get(self.mru_id)
   let self.mru_list = s:mru_list is# '' ? [] : s:mru_list
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.clear_mru_listfile() abort
+function! s:MPlayer.clear_mru_listfile() abort " {{{
   call s:CacheFile.set(self.mru_id, [])
   let self.mru_list = []
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.stop() abort
+function! s:MPlayer.stop() abort " {{{
   if !self.is_playing() | return | endif
   call self._write("quit\n")
   call self.update_mru_listfile()
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.get_file_info() abort
+function! s:MPlayer.get_file_info() abort " {{{
   if !self.is_playing() | return | endif
   return s:get_file_info(substitute(iconv(self._command(join(s:INFO_COMMANDS, "\n")), s:TENC, &enc), "'", '', 'g'))
-endfunction
+endfunction " }}}
 
-function! s:MPlayer._command(cmd) abort
+function! s:MPlayer._command(cmd) abort " {{{
   if !self.is_playing() | return | endif
   call self._write(join([s:DUMMY_COMMAND, a:cmd, ''], "\n"))
   return substitute(self._read(), s:DUMMY_PATTERN, '', 'g')
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.command(cmd, ...) abort
+function! s:MPlayer.command(cmd, ...) abort " {{{
   let is_iconv = a:0 > 0 ? a:1 : 0
   let str = self._command(a:cmd)
   return matchstr(substitute(is_iconv ? iconv(str, s:TENC, &enc) : str, "^\e[A\r\e[K", '', ''), '^ANS_.\+=\zs.*$')
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.next(...) abort
+function! s:MPlayer.next(...) abort " {{{
   let n = a:0 > 0 ? a:1 : 1
   return iconv(self._command('pt_step ' . n), s:TENC, &enc)
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.prev(...) abort
+function! s:MPlayer.prev(...) abort " {{{
   let n = -(a:0 > 0 ? a:1 : 1)
   return iconv(self._command('pt_step ' . n), s:TENC, &enc)
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.set_loop(n) abort
+function! s:MPlayer.set_loop(n) abort " {{{
   return self._command('loop ' . a:n . ' 1')
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.set_volume(level) abort
+function! s:MPlayer.set_volume(level) abort " {{{
   return self._command('volume ' . a:level . ' 1')
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.set_seek(pos) abort
+function! s:MPlayer.set_seek(pos) abort " {{{
   let [second, lastchar] = [s:to_second(a:pos), a:pos[-1 :]]
   return second != -1 ? self._command('seek ' . second . ' 2')
         \ : lastchar ==# 's' || lastchar =~# '\d' ? self._command('seek ' . a:pos . ' 2')
         \ : lastchar ==# '%' ? self._command('seek ' . a:pos . ' 1')
         \ : ''
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.set_seek_to_head() abort
+function! s:MPlayer.set_seek_to_head() abort " {{{
   return self._command('seek 0 1')
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.set_seek_to_end() abort
+function! s:MPlayer.set_seek_to_end() abort " {{{
   return self._command('seek 100 1')
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.set_speed(speed, is_scaletempo) abort
+function! s:MPlayer.set_speed(speed, is_scaletempo) abort " {{{
   return [
         \ a:is_scaletempo ? self._command('af_add scaletempo') : self._command('af_del scaletempo'),
         \ self._command('speed_set ' . a:speed)
         \]
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.set_equalizer(band_str) abort
+function! s:MPlayer.set_equalizer(band_str) abort " {{{
   return self._command('af_eq_set_bands ' . get(s:eq_presets, a:band_str, a:band_str))
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.toggle_mute() abort
+function! s:MPlayer.toggle_mute() abort " {{{
   return self._command('mute')
-endfunction
+endfunction " }}}
 
-function! s:MPlayer.toggle_pause() abort
+function! s:MPlayer.toggle_pause() abort " {{{
   if !self.is_playing() | return | endif
   call self._write("pause\n")
   return substitute(self._read(), s:DUMMY_PATTERN, '', 'g')
-endfunction
+endfunction " }}}
 
 
-function! s:get_media_items(args) abort
+function! s:get_media_items(args) abort " {{{
   let [items, globptn] = [[], mplayer#get_suffix_globptn()]
   for arg in a:args
     for item in split(expand(arg, 1), "\n")
@@ -232,18 +237,18 @@ function! s:get_media_items(args) abort
     endfor
   endfor
   return items
-endfunction
+endfunction " }}}
 
-function! s:make_loadcmds(items) abort
+function! s:make_loadcmds(items) abort " {{{
   if has('win32unix') && g:mplayer#use_win_mplayer_in_cygwin
     let cyg_subst_ptn = '^' . system('cygpath -u c:')[: -3] . '\(\a\)'
     return map(a:items, '(v:val =~# "\\.\\%(m3u\\|m3u8\\|pls\\|wax\\|wpl\\|xspf\\)$" ? "loadlist " : "loadfile \"") . substitute(v:val, cyg_subst_ptn, "\\1:", "") . "\" 1"')
   else
     return map(a:items, '(v:val =~# "\\.\\%(m3u\\|m3u8\\|pls\\|wax\\|wpl\\|xspf\\)$" ? "loadlist " : "loadfile \"") . v:val . "\" 1"')
   endif
-endfunction
+endfunction " }}}
 
-function! s:get_file_info(text) abort
+function! s:get_file_info(text) abort " {{{
   let answers = map(split(a:text, s:LINE_BREAK), 'matchstr(v:val, "^ANS_.\\+=\\zs.*$")')
   return len(answers) < 17 ? {} : {
         \ 'time_pos': answers[0],
@@ -270,14 +275,14 @@ function! s:get_file_info(text) abort
         \   'resolution': answers[16]
         \ }
         \}
-endfunction
+endfunction " }}}
 
-function! s:to_second(timestr) abort
+function! s:to_second(timestr) abort " {{{
   let parts = split(a:timestr, ':')
   return a:timestr =~# '^\d\+:\d\+:\d\+\%(\.\d\+\)\?$' ? (str2nr(parts[0]) * 3600 + str2nr(parts[1]) * 60 + str2nr(parts[2]))
         \ : a:timestr =~# '^\d\+:\d\+\%(\.\d\+\)\?$' ? (str2nr(parts[0]) * 60 + str2nr(parts[1]))
         \ : -1
-endfunction
+endfunction " }}}
 
 
 let &cpo = s:save_cpo

@@ -20,13 +20,13 @@ let s:source = {
 let s:has_704_279 = v:version > 704 || v:version == 704 && has('patch279')
 
 if exists('*getcompletion')
-  function! s:source.complete(args, context, arglead, cmdline, cursorpos) abort
+  function! s:source.complete(args, context, arglead, cmdline, cursorpos) abort " {{{
     let dirs = getcompletion(a:arglead, 'dir')
     let homedir = expand("~")
     return a:arglead[0] ==# '~' ? map(dirs, 'substitute(v:val, "^" . homedir, "~", "")') : dirs
-  endfunction
+  endfunction " }}}
 else
-  function! s:source.complete(args, context, arglead, cmdline, cursorpos) abort
+  function! s:source.complete(args, context, arglead, cmdline, cursorpos) abort " {{{
     if a:arglead ==# '~'
       return ['~/']
     elseif a:arglead ==# ''
@@ -42,10 +42,10 @@ else
     endif
     let arglead = tolower(a:arglead)
     return filter(dirs, '!stridx(tolower(v:val), arglead)')
-  endfunction
+  endfunction " }}}
 endif
 
-function! s:source.gather_candidates(args, context) abort
+function! s:source.gather_candidates(args, context) abort " {{{
   let s:dir = expand(len(a:args) > 0 ? a:args[0] : get(g:, 'mplayer#default_dir', '~/'))
   if s:dir[-1 :] !=# '/'
     let s:dir .= '/'
@@ -57,16 +57,16 @@ function! s:source.gather_candidates(args, context) abort
         \ "action__path": v:val,
         \ "word": v:val[len :],
         \}')
-endfunction
+endfunction " }}}
 
-function! s:source.hooks.on_close(args, context) abort
+function! s:source.hooks.on_close(args, context) abort " {{{
   call unite#kinds#mplayer#stop_preview()
-endfunction
+endfunction " }}}
 
 
-function! unite#sources#mplayer#define() abort
+function! unite#sources#mplayer#define() abort " {{{
   return s:source
-endfunction
+endfunction " }}}
 
 
 let &cpo = s:save_cpo

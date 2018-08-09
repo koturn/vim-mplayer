@@ -10,15 +10,17 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
+" {{{ Script local variables
 let s:mplayer = mplayer#new()
+" }}}
 
-function! mplayer#denite#play(path) abort
+function! mplayer#denite#play(path) abort " {{{
   call s:mplayer.play(a:path)
-endfunction
+endfunction " }}}
 
-function! mplayer#denite#stop() abort
+function! mplayer#denite#stop() abort " {{{
   call s:mplayer.stop()
-endfunction
+endfunction " }}}
 
 
 let &cpo = s:save_cpo

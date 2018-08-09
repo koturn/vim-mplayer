@@ -13,19 +13,19 @@ set cpo&vim
 
 let s:define = {'name': 'mplayer_mru'}
 
-function! s:define.init(context) abort
+function! s:define.init(context) abort " {{{
   return mplayer#cmd#get_mru_list()
-endfunction
+endfunction " }}}
 
-function! s:define.accept(context, candidate) abort
+function! s:define.accept(context, candidate) abort " {{{
   call milqi#exit()
   call mplayer#cmd#enqueue(a:candidate)
-endfunction
+endfunction " }}}
 
 
-function! milqi#mplayer_mru#start(...) abort
+function! milqi#mplayer_mru#start(...) abort " {{{
   call milqi#candidate_first(s:define)
-endfunction
+endfunction " }}}
 
 
 let &cpo = s:save_cpo

@@ -18,21 +18,21 @@ let s:source = {
       \ 'hooks': {}
       \}
 
-function! s:source.gather_candidates(args, context) abort
+function! s:source.gather_candidates(args, context) abort " {{{
   return map(mplayer#cmd#get_mru_list(), '{
         \ "action__path": v:val,
         \ "word": v:val
         \}')
-endfunction
+endfunction " }}}
 
-function! s:source.hooks.on_close(args, context) abort
+function! s:source.hooks.on_close(args, context) abort " {{{
   call unite#kinds#mplayer#stop_preview()
-endfunction
+endfunction " }}}
 
 
-function! unite#sources#mplayer_mru#define() abort
+function! unite#sources#mplayer_mru#define() abort " {{{
   return s:source
-endfunction
+endfunction " }}}
 
 
 let &cpo = s:save_cpo

@@ -5,14 +5,15 @@
 " A mplayer frontend for Vim.
 " }}}
 " ============================================================================
-if exists('g:loaded_mplayer')
+if exists('g:loaded_mplayer') " {{{
   finish
-endif
+endif " }}}
 let g:loaded_mplayer = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
 
+" {{{ Commands
 command! -bar -nargs=+ -complete=file MPlayer call mplayer#cmd#play(<f-args>)
 command! -bar -nargs=+ -complete=file MPlayerEnqueue call mplayer#cmd#enqueue(<f-args>)
 command! -bar -nargs=+ -complete=customlist,mplayer#complete#mru MPlayerMru call mplayer#cmd#play(<f-args>)
@@ -54,6 +55,7 @@ command! -nargs=? -complete=dir MilqiMPlayer  call milqi#mplayer#start(<f-args>)
 command! -nargs=0 MilqiMPlayerMru  call milqi#mplayer_mru#start()
 command! -nargs=? -complete=dir FZFMPlayer  call fzf#mplayer#start(<f-args>)
 command! -nargs=0 FZFMPlayerMru  call fzf#mplayer_mru#start()
+" }}}
 
 
 let &cpo = s:save_cpo
