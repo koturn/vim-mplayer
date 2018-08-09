@@ -11,11 +11,12 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
-function! s:get_sid() abort
-  return matchstr(expand('<sfile>'), '^function <SNR>\zs\d\+\ze_get_sid$')
+function! s:get_sid_prefix() abort
+  return matchstr(expand('<sfile>'), '^function \zs<SNR>\d\+_\zeget_sid_prefix$')
 endfunction
-let s:sid_prefix = '<SNR>' . s:get_sid() . '_'
-delfunction s:get_sid
+let s:sid_prefix = s:get_sid_prefix()
+delfunction s:get_sid_prefix
+
 let s:define = {
       \ 'name': 'mplayer',
       \ 'enter': s:sid_prefix . 'enter',
@@ -23,6 +24,7 @@ let s:define = {
       \ 'prompt': s:sid_prefix . 'prompt',
       \ 'submitted': s:sid_prefix . 'submitted',
       \}
+unlet s:sid_prefix
 
 function! alti#mplayer#start(...) abort
   let s:dir = expand(a:0 > 0 ? a:1 : get(g:, 'mplayer#default_dir', '~/'))
