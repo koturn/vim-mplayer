@@ -12,7 +12,6 @@ set cpo&vim
 " {{{ import vital.vim library
 let s:V = vital#mplayer#new()
 let s:P = s:V.import('Process')
-let s:PM = s:V.import('Deprecated.ProcessManager')
 " }}}
 " {{{ Constants
 let s:DUMMY_COMMAND = mplayer#_import_local_var('DUMMY_COMMAND')

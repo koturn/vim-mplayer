@@ -13,7 +13,8 @@ let s:P = vital#mplayer#new().import('Process')
 let s:List = vital#mplayer#new().import('Data.List')
 " }}}
 
-let s:eq_presets = { " {{{
+ " {{{
+let s:eq_presets = {
       \ 'acoustic': '0:1:2:0:0:0:0:0:2:2',
       \ 'bass': '3:2:1:0:-1:-2:-3:-4:-5:-6',
       \ 'blues': '-1:0:2:1:0:0:0:0:-1:-3',
@@ -39,7 +40,8 @@ let s:eq_presets = { " {{{
       \ 'speech': '-2:0:2:1:0:0:0:0:-2:-5',
       \ 'swing': '-2:-1:-1:-1:2:2:-1:1:3:3',
       \ 'techno': '-8:-1:2:-3:-3:-4:-2:-2:3:3',
-      \} " }}}
+      \}
+" }}}
 
 " {{{ Constants
 let s:SUB_ARG_DICT = {}
