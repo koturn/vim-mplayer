@@ -9,7 +9,6 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 " {{{ import vital.vim library
-let s:P = vital#mplayer#new().import('Process')
 let s:List = vital#mplayer#new().import('Data.List')
 " }}}
 
@@ -99,13 +98,15 @@ lockvar s:HELP_DICT
 " }}}
 
 
+let s:system = mplayer#util#_get_system_func()
+
 function! mplayer#complete#mru(arglead, cmdline, cursorpos) abort " {{{
   return map(s:match_filter(mplayer#cmd#get_mru_list(), expand(a:arglead)), 'fnameescape(v:val)')
 endfunction " }}}
 
 function! mplayer#complete#cmd(arglead, cmdline, cursorpos) abort " {{{
   if !exists('s:cmd_complete_cache')
-    let cmdlist = s:P.system(g:mplayer#mplayer . ' -input cmdlist')
+    let cmdlist = s:system(g:mplayer#mplayer . ' -input cmdlist')
     let s:cmd_complete_cache = sort(map(split(cmdlist, "\n"), 'split(v:val, " \\+")[0]'))
   endif
   let args = split(split(a:cmdline, '[^\\]\zs|')[-1], '\s\+')

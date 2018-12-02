@@ -24,7 +24,7 @@ function! s:MPlayerEngineVimproc.start(custom_option) abort " {{{
   if !executable(self.mplayer)
     throw '[vim-mplayer] Please install mplayer'
   endif
-  if !s:has_vimproc()
+  if !mplayer#util#_has_vimproc()
     throw '[vim-mplayer] vimproc.vim is unavailable'
   endif
   call self.stop()
@@ -62,21 +62,6 @@ function! s:MPlayerEngineVimproc.flush() abort " {{{
   return s:read(self.handle, [])
 endfunction " }}}
 " }}}
-
-
-function! s:has_vimproc() abort " {{{
-  return exists('s:exists_vimproc') ? s:exists_vimproc : s:_has_vimproc()
-endfunction " }}}
-
-function! s:_has_vimproc() abort " {{{
-  try
-    call vimproc#version()
-    let s:exists_vimproc = 1
-  catch
-    let s:exists_vimproc = 0
-  endtry
-  return s:exists_vimproc
-endfunction " }}}
 
 
 let s:proc_dict = {}

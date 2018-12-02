@@ -11,7 +11,6 @@ set cpo&vim
 
 " {{{ import vital.vim library
 let s:V = vital#mplayer#new()
-let s:P = s:V.import('Process')
 " }}}
 " {{{ Constants
 let s:DUMMY_COMMAND = mplayer#_import_local_var('DUMMY_COMMAND')
@@ -31,6 +30,8 @@ let s:mplayer = mplayer#new()
 let s:rt_sw = 0
 " }}}
 
+
+let s:system = mplayer#util#_get_system_func()
 
 function! mplayer#cmd#play(...) abort " {{{
   call call(s:mplayer.play, a:000, s:mplayer)
@@ -229,7 +230,7 @@ endfunction " }}}
 function! mplayer#cmd#help(...) abort " {{{
   let arg = get(a:, 1, 'cmdlist')
   if has_key(s:HELP_DICT, arg)
-    echo s:P.system(g:mplayer#mplayer . ' ' . s:HELP_DICT[arg])
+    echo s:system(g:mplayer#mplayer . ' ' . s:HELP_DICT[arg])
   endif
 endfunction " }}}
 
